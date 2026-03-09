@@ -42,6 +42,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify({ email, password }),
       });
 
+      // Check if response is HTML (API not found)
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('text/html')) {
+        console.error('API returned HTML instead of JSON. API endpoint might not be deployed.');
+        throw new Error('API endpoint not available. Please ensure the app is deployed to Vercel.');
+      }
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Login failed' }));
         throw new Error(errorData.error || 'Login failed');
