@@ -17,6 +17,7 @@ export function AdminCustomers() {
     name: '',
     email: '',
     phone: '',
+    password: '',
   });
 
   useEffect(() => {
@@ -34,7 +35,7 @@ export function AdminCustomers() {
       await createCustomer(formData);
       toast.success('Customer added successfully!');
       setShowAddDialog(false);
-      setFormData({ name: '', email: '', phone: '' });
+      setFormData({ name: '', email: '', phone: '', password: '' });
       loadCustomers();
     } catch (error) {
       toast.error('Failed to add customer');
@@ -48,7 +49,7 @@ export function AdminCustomers() {
         await updateCustomer(editingCustomer.id, formData);
         toast.success('Customer updated successfully!');
         setShowEditDialog(false);
-        setFormData({ name: '', email: '', phone: '' });
+        setFormData({ name: '', email: '', phone: '', password: '' });
         loadCustomers();
       } catch (error) {
         toast.error('Failed to update customer');
@@ -173,7 +174,7 @@ export function AdminCustomers() {
                           className="h-7 w-7" 
                           onClick={() => {
                             setEditingCustomer(customer);
-                            setFormData({ name: customer.name, email: customer.email, phone: customer.phone });
+                            setFormData({ name: customer.name, email: customer.email, phone: customer.phone, password: '' });
                             setShowEditDialog(true);
                           }}
                         >
@@ -207,6 +208,9 @@ export function AdminCustomers() {
           <Dialog.Overlay className="fixed inset-0 bg-black/50" />
           <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg p-6 w-full max-w-md">
             <Dialog.Title className="text-2xl mb-4">Add New Customer</Dialog.Title>
+            <Dialog.Description className="sr-only">
+              Add a new customer with their contact information and password
+            </Dialog.Description>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm mb-2">Full Name</label>
@@ -237,6 +241,16 @@ export function AdminCustomers() {
                   required
                 />
               </div>
+              <div>
+                <label className="block text-sm mb-2">Password</label>
+                <Input
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  placeholder="Enter password"
+                  required
+                />
+              </div>
               <div className="flex gap-4 pt-4">
                 <Button type="submit">Add Customer</Button>
                 <Button type="button" variant="outline" onClick={() => setShowAddDialog(false)}>
@@ -254,6 +268,9 @@ export function AdminCustomers() {
           <Dialog.Overlay className="fixed inset-0 bg-black/50" />
           <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg p-6 w-full max-w-md">
             <Dialog.Title className="text-2xl mb-4">Edit Customer</Dialog.Title>
+            <Dialog.Description className="sr-only">
+              Edit customer information and optionally update password
+            </Dialog.Description>
             <form onSubmit={handleEditSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm mb-2">Full Name</label>
@@ -283,6 +300,16 @@ export function AdminCustomers() {
                   placeholder="+1 (555) 123-4567"
                   required
                 />
+              </div>
+              <div>
+                <label className="block text-sm mb-2">Password</label>
+                <Input
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  placeholder="Enter password"
+                />
+                <p className="text-xs text-gray-500 mt-1">Leave blank to keep current password</p>
               </div>
               <div className="flex gap-4 pt-4">
                 <Button type="submit">Update Customer</Button>

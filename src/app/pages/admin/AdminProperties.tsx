@@ -321,11 +321,14 @@ export function AdminProperties() {
       {/* Add Property Dialog */}
       <Dialog.Root open={showAddDialog} onOpenChange={setShowAddDialog}>
         <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 bg-black/50" />
-          <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <Dialog.Title className="text-2xl mb-4">Add New Property</Dialog.Title>
+          <Dialog.Overlay className="fixed inset-0 bg-black/50 z-50" />
+          <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg p-4 sm:p-6 w-[95vw] sm:w-full max-w-2xl max-h-[90vh] overflow-y-auto z-50">
+            <Dialog.Title className="text-xl sm:text-2xl mb-4">Add New Property</Dialog.Title>
+            <Dialog.Description className="sr-only">
+              Add a new property to your listings with details, images, and amenities
+            </Dialog.Description>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm mb-2">Title</label>
                   <Input
@@ -353,7 +356,7 @@ export function AdminProperties() {
                   required
                 />
               </div>
-              <div className="grid grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <div>
                   <label className="block text-sm mb-2">Price/night</label>
                   <Input
@@ -407,7 +410,7 @@ export function AdminProperties() {
                   Upload multiple images. Each will be automatically compressed to WebP format (max 50KB).
                 </p>
                 
-                <div className="flex items-center gap-3 mb-3">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-3">
                   <label className="cursor-pointer">
                     <div className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">
                       <Upload className="h-4 w-4" />
@@ -431,7 +434,7 @@ export function AdminProperties() {
 
                 {/* Image Previews */}
                 {uploadedImages.length > 0 && (
-                  <div className="grid grid-cols-4 gap-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     {uploadedImages.map((imageUrl, index) => (
                       <div key={index} className="relative group">
                         <img
@@ -461,9 +464,9 @@ export function AdminProperties() {
                   required
                 />
               </div>
-              <div className="flex gap-4 pt-4">
-                <Button type="submit">Add Property</Button>
-                <Button type="button" variant="outline" onClick={() => setShowAddDialog(false)}>
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4">
+                <Button type="submit" className="w-full sm:w-auto">Add Property</Button>
+                <Button type="button" variant="outline" onClick={() => setShowAddDialog(false)} className="w-full sm:w-auto">
                   Cancel
                 </Button>
               </div>
@@ -475,11 +478,14 @@ export function AdminProperties() {
       {/* Edit Property Dialog */}
       <Dialog.Root open={showEditDialog} onOpenChange={setShowEditDialog}>
         <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 bg-black/50" />
-          <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <Dialog.Title className="text-2xl mb-4">Edit Property</Dialog.Title>
+          <Dialog.Overlay className="fixed inset-0 bg-black/50 z-50" />
+          <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg p-4 sm:p-6 w-[95vw] sm:w-full max-w-2xl max-h-[90vh] overflow-y-auto z-50">
+            <Dialog.Title className="text-xl sm:text-2xl mb-4">Edit Property</Dialog.Title>
+            <Dialog.Description className="sr-only">
+              Edit property information including details, images, and amenities
+            </Dialog.Description>
             <form onSubmit={handleUpdate} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm mb-2">Title</label>
                   <Input
@@ -507,7 +513,7 @@ export function AdminProperties() {
                   required
                 />
               </div>
-              <div className="grid grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <div>
                   <label className="block text-sm mb-2">Price/night</label>
                   <Input
@@ -561,7 +567,7 @@ export function AdminProperties() {
                   Upload multiple images. Each will be automatically compressed to WebP format (max 50KB).
                 </p>
                 
-                <div className="flex items-center gap-3 mb-3">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-3">
                   <label className="cursor-pointer">
                     <div className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">
                       <Upload className="h-4 w-4" />
@@ -585,7 +591,7 @@ export function AdminProperties() {
 
                 {/* Image Previews */}
                 {uploadedImages.length > 0 && (
-                  <div className="grid grid-cols-4 gap-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     {uploadedImages.map((imageUrl, index) => (
                       <div key={index} className="relative group">
                         <img
@@ -615,9 +621,9 @@ export function AdminProperties() {
                   required
                 />
               </div>
-              <div className="flex gap-4 pt-4">
-                <Button type="submit">Update Property</Button>
-                <Button type="button" variant="outline" onClick={() => setShowEditDialog(false)}>
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4">
+                <Button type="submit" className="w-full sm:w-auto">Update Property</Button>
+                <Button type="button" variant="outline" onClick={() => setShowEditDialog(false)} className="w-full sm:w-auto">
                   Cancel
                 </Button>
               </div>
@@ -632,6 +638,9 @@ export function AdminProperties() {
           <Dialog.Overlay className="fixed inset-0 bg-black/50" />
           <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <Dialog.Title className="text-2xl mb-4">Calendar Sync & Export</Dialog.Title>
+            <Dialog.Description className="sr-only">
+              Export calendar to iCal format and import Airbnb calendar to prevent double bookings
+            </Dialog.Description>
             <div className="space-y-6">
               <div>
                 <label className="block text-sm mb-2 font-medium">Property</label>

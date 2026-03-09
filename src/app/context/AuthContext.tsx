@@ -46,6 +46,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error('Login failed');
       }
 
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error('Invalid response format');
+      }
+
       const data = await response.json();
       setUser(data.user);
       localStorage.setItem('token', data.token);
@@ -74,6 +79,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (!response.ok) {
         throw new Error('Signup failed');
+      }
+
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error('Invalid response format');
       }
 
       const data = await response.json();

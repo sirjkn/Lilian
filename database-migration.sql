@@ -27,6 +27,10 @@ ADD COLUMN IF NOT EXISTS vrbo_import_url TEXT,
 ADD COLUMN IF NOT EXISTS calendar_sync_enabled BOOLEAN DEFAULT false,
 ADD COLUMN IF NOT EXISTS last_calendar_sync TIMESTAMP;
 
+-- 2.1 Update customers table to add password field
+ALTER TABLE customers
+ADD COLUMN IF NOT EXISTS password_hash VARCHAR(255);
+
 -- 3. Insert default settings for General Settings
 INSERT INTO settings (category, key, value) VALUES
   ('general', 'site_name', 'Skyway Suites'),

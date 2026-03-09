@@ -41,6 +41,7 @@ CREATE TABLE customers (
   name VARCHAR(255) NOT NULL,
   email VARCHAR(255) UNIQUE NOT NULL,
   phone VARCHAR(50),
+  password_hash VARCHAR(255),
   created_at TIMESTAMP DEFAULT NOW()
 );
 

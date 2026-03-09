@@ -27,6 +27,7 @@ export interface Booking {
   checkOut: string;
   guests: number;
   totalPrice: number;
+  amountPaid?: number;
   status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
   createdAt: string;
 }
@@ -123,7 +124,7 @@ export async function updateProperty(id: string, property: Partial<Property>): P
 }
 
 export async function deleteProperty(id: string): Promise<void> {
-  await fetchWithAuth(`${API_BASE_URL}/properties/${id}`, {
+  return await fetchWithAuth(`${API_BASE_URL}/properties/${id}`, {
     method: 'DELETE',
   });
 }
@@ -156,6 +157,12 @@ export async function updateBooking(id: string, booking: Partial<Booking>): Prom
   return await fetchWithAuth(`${API_BASE_URL}/bookings/${id}`, {
     method: 'PUT',
     body: JSON.stringify(booking),
+  });
+}
+
+export async function deleteBooking(id: string): Promise<void> {
+  return await fetchWithAuth(`${API_BASE_URL}/bookings/${id}`, {
+    method: 'DELETE',
   });
 }
 

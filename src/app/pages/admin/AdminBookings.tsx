@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
-import { Plus, Home, Users, Calendar } from 'lucide-react';
-import { getBookings, Booking, getProperties, getCustomers, getPayments, Payment } from '../../lib/api';
+import { Plus, Home, Users, Calendar, DollarSign, Trash2 } from 'lucide-react';
+import { getBookings, Booking, getProperties, getCustomers, getPayments, Payment, createPayment, deleteBooking } from '../../lib/api';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
+import { Combobox } from '../../components/ui/combobox';
 import { toast } from 'sonner';
 import * as Dialog from '@radix-ui/react-dialog';
-import * as Select from '@radix-ui/react-select';
 
 export function AdminBookings() {
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -30,6 +30,23 @@ export function AdminBookings() {
     getCustomers().then(setCustomers);
     getPayments().then(setPayments);
   }, []);
+
+  // Calculate total price when property, check-in, or check-out changes
+  useEffect(() => {
+    if (formData.propertyId && formData.checkIn && formData.checkOut) {
+      const property = properties.find(p => p.id === formData.propertyId);
+      if (property) {
+        const checkInDate = new Date(formData.checkIn);
+        const checkOutDate = new Date(formData.checkOut);
+        const numberOfDays = Math.ceil((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24));
+        
+        if (numberOfDays > 0) {
+          const totalPrice = property.price * numberOfDays;
+          setFormData(prev => ({ ...prev, totalPrice: totalPrice.toString() }));
+        }
+      }
+    }
+  }, [formData.propertyId, formData.checkIn, formData.checkOut, properties]);
 
   const loadBookings = async () => {
     const data = await getBookings();
@@ -68,6 +85,48 @@ export function AdminBookings() {
   const getCustomerName = (customerId: string) => {
     const customer = customers.find(c => c.id === customerId);
     return customer?.name || 'Unknown Customer';
+  };
+
+  const handleMakePayment = async (booking: Booking) => {
+    try {
+      // Check if payment already exists
+      const existingPayment = payments.find(p => p.bookingId === booking.id);
+      
+      if (existingPayment && existingPayment.status === 'paid') {
+        toast.error('Payment already completed for this booking');
+        return;
+      }
+
+      // Create payment
+      await createPayment({
+        bookingId: booking.id,
+        customerId: booking.customerId,
+        amount: booking.totalPrice,
+        status: 'paid',
+        paymentMethod: 'Credit Card',
+      });
+
+      toast.success('Payment processed successfully!');
+      
+      // Reload data
+      const updatedPayments = await getPayments();
+      setPayments(updatedPayments);
+      loadBookings();
+    } catch (error) {
+      toast.error('Failed to process payment');
+    }
+  };
+
+  const handleDeleteBooking = async (id: string) => {
+    if (confirm('Are you sure you want to delete this booking? This will remove it from the calendar and database.')) {
+      try {
+        await deleteBooking(id);
+        toast.success('Booking deleted successfully!');
+        loadBookings();
+      } catch (error) {
+        toast.error('Failed to delete booking');
+      }
+    }
   };
 
   return (
@@ -148,6 +207,7 @@ export function AdminBookings() {
                   <th className="text-left py-2 px-3 font-medium">Check-out</th>
                   <th className="text-left py-2 px-3 font-medium">Total</th>
                   <th className="text-left py-2 px-3 font-medium">Status</th>
+                  <th className="text-left py-2 px-3 font-medium">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -164,6 +224,29 @@ export function AdminBookings() {
                         {getBookingStatus(booking)}
                       </span>
                     </td>
+                    <td className="py-2 px-3">
+                      <div className="flex gap-2">
+                        {getBookingStatus(booking) === 'pending payment' && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
+                            onClick={() => handleMakePayment(booking)}
+                          >
+                            <DollarSign className="h-3 w-3 mr-1" />
+                            Pay
+                          </Button>
+                        )}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-red-600 hover:bg-red-50 border-red-200"
+                          onClick={() => handleDeleteBooking(booking.id)}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -178,34 +261,29 @@ export function AdminBookings() {
           <Dialog.Overlay className="fixed inset-0 bg-black/50" />
           <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg p-6 w-full max-w-md">
             <Dialog.Title className="text-2xl mb-4">Create Booking</Dialog.Title>
+            <Dialog.Description className="sr-only">
+              Create a new booking by selecting a property, customer, and dates
+            </Dialog.Description>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm mb-2">Property</label>
-                <select
-                  className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+                <Combobox
                   value={formData.propertyId}
-                  onChange={(e) => setFormData({ ...formData, propertyId: e.target.value })}
-                  required
-                >
-                  <option value="">Select a property</option>
-                  {properties.map(p => (
-                    <option key={p.id} value={p.id}>{p.title}</option>
-                  ))}
-                </select>
+                  onChange={(value) => setFormData({ ...formData, propertyId: value })}
+                  options={properties.map(p => ({ value: p.id, label: `${p.title} - $${p.price}/night` }))}
+                  placeholder="Select a property"
+                  searchPlaceholder="Search properties..."
+                />
               </div>
               <div>
                 <label className="block text-sm mb-2">Customer</label>
-                <select
-                  className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+                <Combobox
                   value={formData.customerId}
-                  onChange={(e) => setFormData({ ...formData, customerId: e.target.value })}
-                  required
-                >
-                  <option value="">Select a customer</option>
-                  {customers.map(c => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </select>
+                  onChange={(value) => setFormData({ ...formData, customerId: value })}
+                  options={customers.map(c => ({ value: c.id, label: c.name }))}
+                  placeholder="Select a customer"
+                  searchPlaceholder="Search customers..."
+                />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -238,13 +316,19 @@ export function AdminBookings() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm mb-2">Total Price</label>
+                  <label className="block text-sm mb-2">Total Price (Auto-calculated)</label>
                   <Input
                     type="number"
                     value={formData.totalPrice}
-                    onChange={(e) => setFormData({ ...formData, totalPrice: e.target.value })}
-                    required
+                    readOnly
+                    className="bg-gray-100 cursor-not-allowed"
+                    placeholder="Select property and dates"
                   />
+                  {formData.totalPrice && formData.propertyId && formData.checkIn && formData.checkOut && (
+                    <p className="text-xs text-gray-600 mt-1">
+                      {Math.ceil((new Date(formData.checkOut).getTime() - new Date(formData.checkIn).getTime()) / (1000 * 60 * 60 * 24))} nights × ${properties.find(p => p.id === formData.propertyId)?.price}/night
+                    </p>
+                  )}
                 </div>
               </div>
               <div className="flex gap-4 pt-4">

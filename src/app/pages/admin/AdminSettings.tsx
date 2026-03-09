@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Save, Bell, Users as UsersIcon, Settings as SettingsIcon, Image, Mail, MessageCircle, CheckCircle } from 'lucide-react';
+import { Save, Bell, Users as UsersIcon, Settings as SettingsIcon, Image, Mail, MessageCircle, CheckCircle, Upload, X } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
@@ -7,11 +7,19 @@ import * as Tabs from '@radix-ui/react-tabs';
 import * as Select from '@radix-ui/react-select';
 import { toast } from 'sonner';
 import { getHeroSettings, updateHeroSettings } from '../../lib/api';
+import { compressImageToWebP } from '../../lib/imageUtils';
+import { uploadToCloudinary, getCloudinaryConfig, saveCloudinaryConfig } from '../../lib/cloudinaryUpload';
 
 export function AdminSettings() {
   const [activeTab, setActiveTab] = useState('general');
   const [heroBackgroundUrl, setHeroBackgroundUrl] = useState('');
   const [isLoadingHero, setIsLoadingHero] = useState(true);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadPreview, setUploadPreview] = useState('');
+  
+  // Cloudinary configuration
+  const [cloudinaryCloudName, setCloudinaryCloudName] = useState('');
+  const [cloudinaryUploadPreset, setCloudinaryUploadPreset] = useState('');
 
   // Email Integration State
   const [emailProvider, setEmailProvider] = useState('sendgrid');
@@ -35,7 +43,19 @@ export function AdminSettings() {
 
   useEffect(() => {
     loadHeroSettings();
+    loadCloudinaryConfig();
   }, []);
+
+  const loadCloudinaryConfig = () => {
+    const config = getCloudinaryConfig();
+    setCloudinaryCloudName(config.cloudName);
+    setCloudinaryUploadPreset(config.uploadPreset);
+  };
+
+  const handleSaveCloudinaryConfig = () => {
+    saveCloudinaryConfig(cloudinaryCloudName, cloudinaryUploadPreset);
+    toast.success('Cloudinary configuration saved!');
+  };
 
   const loadHeroSettings = async () => {
     try {
@@ -56,6 +76,46 @@ export function AdminSettings() {
       toast.success('Hero background updated! Refresh the homepage to see changes.');
     } catch (error) {
       toast.error('Failed to update hero background. Make sure you\'re connected to the database.');
+    }
+  };
+
+  const handleUploadImage = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Check if cloudinary is configured
+    if (!cloudinaryCloudName || !cloudinaryUploadPreset) {
+      toast.error('Please configure Cloudinary settings first!');
+      return;
+    }
+
+    setIsUploading(true);
+    
+    try {
+      // Show file size
+      toast.info(`Compressing image... (${(file.size / 1024).toFixed(0)}KB)`);
+      
+      // Compress to WebP (max 50KB)
+      const compressedImage = await compressImageToWebP(file, 50);
+      
+      toast.info(`Compressed to ${compressedImage.size}KB, uploading to Cloudinary...`);
+      
+      // Upload to Cloudinary
+      const uploadResponse = await uploadToCloudinary(
+        compressedImage.dataUrl,
+        cloudinaryCloudName,
+        cloudinaryUploadPreset
+      );
+
+      setHeroBackgroundUrl(uploadResponse.secureUrl);
+      setUploadPreview(uploadResponse.secureUrl);
+      
+      toast.success(`Image uploaded successfully! (${(uploadResponse.bytes / 1024).toFixed(0)}KB)`);
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      toast.error(error.message || 'Failed to upload image. Check your Cloudinary settings.');
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -115,28 +175,117 @@ export function AdminSettings() {
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg">Hero Background</CardTitle>
-                <CardDescription>Set the background image for the homepage hero section</CardDescription>
+                <CardDescription>Upload or set the background image for the homepage hero section</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
+                {uploadPreview && (
+                  <div className="relative w-full h-32 rounded-lg overflow-hidden bg-gray-100">
+                    <img src={uploadPreview} alt="Preview" className="w-full h-full object-cover" />
+                    <button
+                      onClick={() => {
+                        setUploadPreview('');
+                        setHeroBackgroundUrl('');
+                      }}
+                      className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
+                
                 <div>
-                  <label className="block text-sm mb-1.5">Background Image URL</label>
+                  <label className="block text-sm mb-1.5 font-medium">Upload Image (Auto-compressed to WebP, max 50KB)</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleUploadImage}
+                      className="hidden"
+                      id="upload-hero-image"
+                      disabled={isUploading}
+                    />
+                    <label
+                      htmlFor="upload-hero-image"
+                      className={`flex items-center justify-center gap-2 px-4 py-2 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
+                        isUploading 
+                          ? 'bg-gray-100 border-gray-300 cursor-not-allowed' 
+                          : 'hover:bg-gray-50 border-gray-300 hover:border-blue-500'
+                      }`}
+                    >
+                      <Upload className="h-4 w-4 text-gray-600" />
+                      <span className="text-sm text-gray-700">
+                        {isUploading ? 'Uploading...' : 'Click to upload image'}
+                      </span>
+                    </label>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Images will be automatically converted to WebP and compressed to under 50KB
+                  </p>
+                </div>
+
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-gray-300"></div>
+                  </div>
+                  <div className="relative flex justify-center text-xs">
+                    <span className="bg-white px-2 text-gray-500">OR</span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm mb-1.5 font-medium">Background Image URL</label>
                   <Input 
                     value={heroBackgroundUrl}
                     onChange={(e) => setHeroBackgroundUrl(e.target.value)}
                     placeholder="https://example.com/image.jpg"
                   />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Paste a direct image URL from any source
+                  </p>
                 </div>
-                <div className="p-3 bg-blue-50 rounded-md text-xs">
-                  <p className="mb-1.5"><strong>Upload an image:</strong></p>
-                  <ol className="list-decimal list-inside space-y-0.5 text-gray-700">
-                    <li>Upload to <a href="https://imgur.com" target="_blank" className="text-blue-600 hover:underline">Imgur</a> or <a href="https://cloudinary.com" target="_blank" className="text-blue-600 hover:underline">Cloudinary</a></li>
-                    <li>Copy the image URL</li>
-                    <li>Paste it above and save</li>
-                  </ol>
-                </div>
-                <Button onClick={handleSaveHeroBackground} size="sm">
+
+                <Button onClick={handleSaveHeroBackground} size="sm" disabled={!heroBackgroundUrl}>
                   <Save className="h-3.5 w-3.5 mr-2" />
                   Save Background
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg">Cloudinary Configuration</CardTitle>
+                <CardDescription>Configure Cloudinary for automatic image uploads</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div>
+                  <label className="block text-sm mb-1.5 font-medium">Cloud Name</label>
+                  <Input 
+                    value={cloudinaryCloudName}
+                    onChange={(e) => setCloudinaryCloudName(e.target.value)}
+                    placeholder="your-cloud-name"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm mb-1.5 font-medium">Upload Preset</label>
+                  <Input 
+                    value={cloudinaryUploadPreset}
+                    onChange={(e) => setCloudinaryUploadPreset(e.target.value)}
+                    placeholder="your-upload-preset"
+                  />
+                </div>
+                <div className="p-3 bg-blue-50 rounded-md text-xs">
+                  <p className="mb-1.5"><strong>Setup Cloudinary:</strong></p>
+                  <ol className="list-decimal list-inside space-y-0.5 text-gray-700">
+                    <li>Create a free account at <a href="https://cloudinary.com" target="_blank" className="text-blue-600 hover:underline">cloudinary.com</a></li>
+                    <li>Go to Settings → Upload → Add upload preset</li>
+                    <li>Set signing mode to \"Unsigned\"</li>
+                    <li>Copy your Cloud Name and Upload Preset</li>
+                    <li>Paste them above and save</li>
+                  </ol>
+                </div>
+                <Button onClick={handleSaveCloudinaryConfig} size="sm">
+                  <Save className="h-3.5 w-3.5 mr-2" />
+                  Save Cloudinary Config
                 </Button>
               </CardContent>
             </Card>
