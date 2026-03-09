@@ -47,6 +47,10 @@ export interface Payment {
   createdAt: string;
 }
 
+export interface HeroSettings {
+  backgroundImage: string;
+}
+
 // Helper function to get auth token
 function getAuthToken(): string | null {
   return localStorage.getItem('token');
@@ -61,14 +65,25 @@ async function fetchWithAuth(url: string, options: RequestInit = {}) {
     ...options.headers,
   };
 
-  const response = await fetch(url, { ...options, headers });
-  
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: 'Request failed' }));
-    throw new Error(error.error || 'Request failed');
+  try {
+    const response = await fetch(url, { ...options, headers });
+    
+    // Check if response is JSON
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      throw new Error('API endpoint not available');
+    }
+    
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ error: 'Request failed' }));
+      throw new Error(error.error || 'Request failed');
+    }
+    
+    return response.json();
+  } catch (error) {
+    // Re-throw the error so it can be caught by the calling function
+    throw error;
   }
-  
-  return response.json();
 }
 
 // Properties API
@@ -76,8 +91,7 @@ export async function getProperties(): Promise<Property[]> {
   try {
     return await fetchWithAuth(`${API_BASE_URL}/properties`);
   } catch (error) {
-    console.error('Error fetching properties:', error);
-    // Return mock data as fallback if backend is not running
+    // Silently use mock data when backend is not available
     return getMockProperties();
   }
 }
@@ -86,7 +100,7 @@ export async function getProperty(id: string): Promise<Property | null> {
   try {
     return await fetchWithAuth(`${API_BASE_URL}/properties/${id}`);
   } catch (error) {
-    console.error('Error fetching property:', error);
+    // Silently use mock data when backend is not available
     return getMockProperties().find(p => p.id === id) || null;
   }
 }
@@ -116,7 +130,7 @@ export async function getBookings(): Promise<Booking[]> {
   try {
     return await fetchWithAuth(`${API_BASE_URL}/bookings`);
   } catch (error) {
-    console.error('Error fetching bookings:', error);
+    // Silently use mock data when backend is not available
     return getMockBookings();
   }
 }
@@ -147,7 +161,7 @@ export async function getCustomers(): Promise<Customer[]> {
   try {
     return await fetchWithAuth(`${API_BASE_URL}/customers`);
   } catch (error) {
-    console.error('Error fetching customers:', error);
+    // Silently use mock data when backend is not available
     return getMockCustomers();
   }
 }
@@ -164,7 +178,7 @@ export async function getPayments(): Promise<Payment[]> {
   try {
     return await fetchWithAuth(`${API_BASE_URL}/payments`);
   } catch (error) {
-    console.error('Error fetching payments:', error);
+    // Silently use mock data when backend is not available
     return getMockPayments();
   }
 }
@@ -295,4 +309,21 @@ function getMockPayments(): Payment[] {
       createdAt: '2026-03-05',
     },
   ];
+}
+
+// Hero Settings API
+export async function getHeroSettings(): Promise<HeroSettings | null> {
+  try {
+    return await fetchWithAuth(`${API_BASE_URL}/settings/hero`);
+  } catch (error) {
+    // Return null when backend is not available
+    return null;
+  }
+}
+
+export async function updateHeroSettings(settings: HeroSettings): Promise<HeroSettings> {
+  return await fetchWithAuth(`${API_BASE_URL}/settings/hero`, {
+    method: 'PUT',
+    body: JSON.stringify(settings),
+  });
 }

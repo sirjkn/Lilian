@@ -54,6 +54,8 @@ A full-stack Airbnb-like property booking platform built with React, TypeScript,
 
 ### Local Development
 
+**Note**: The app runs with **mock data** locally. To use the real Neon database, deploy to Vercel or run the backend API server.
+
 1. **Clone the repository**:
 ```bash
 git clone <your-repo-url>

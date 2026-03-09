@@ -1,13 +1,42 @@
-import { useState } from 'react';
-import { Save, Bell, Users as UsersIcon, Settings as SettingsIcon } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Save, Bell, Users as UsersIcon, Settings as SettingsIcon, Image } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
 import * as Tabs from '@radix-ui/react-tabs';
 import { toast } from 'sonner';
+import { getHeroSettings, updateHeroSettings } from '../../lib/api';
 
 export function AdminSettings() {
   const [activeTab, setActiveTab] = useState('general');
+  const [heroBackgroundUrl, setHeroBackgroundUrl] = useState('');
+  const [isLoadingHero, setIsLoadingHero] = useState(true);
+
+  useEffect(() => {
+    loadHeroSettings();
+  }, []);
+
+  const loadHeroSettings = async () => {
+    try {
+      const settings = await getHeroSettings();
+      if (settings?.backgroundImage) {
+        setHeroBackgroundUrl(settings.backgroundImage);
+      }
+    } catch (error) {
+      console.error('Failed to load hero settings');
+    } finally {
+      setIsLoadingHero(false);
+    }
+  };
+
+  const handleSaveHeroBackground = async () => {
+    try {
+      await updateHeroSettings({ backgroundImage: heroBackgroundUrl });
+      toast.success('Hero background updated! Refresh the homepage to see changes.');
+    } catch (error) {
+      toast.error('Failed to update hero background. Make sure you\'re connected to the database.');
+    }
+  };
 
   return (
     <div className="p-8">
@@ -142,6 +171,36 @@ export function AdminSettings() {
                 <Button onClick={() => toast.success('Booking settings saved!')}>
                   <Save className="h-4 w-4 mr-2" />
                   Save Changes
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Hero Background</CardTitle>
+                <CardDescription>Set the background image for the homepage hero section</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <label className="block text-sm mb-2">Background Image URL</label>
+                  <Input
+                    type="text"
+                    value={heroBackgroundUrl}
+                    onChange={(e) => setHeroBackgroundUrl(e.target.value)}
+                    placeholder="https://example.com/image.jpg"
+                  />
+                </div>
+                <div className="p-4 bg-blue-50 rounded-md text-sm">
+                  <p className="mb-2"><strong>Upload an image:</strong></p>
+                  <ol className="list-decimal list-inside space-y-1 text-gray-700">
+                    <li>Upload an image to a hosting service (e.g., Imgur, Cloudinary)</li>
+                    <li>Copy the image URL</li>
+                    <li>Paste it above and save</li>
+                  </ol>
+                </div>
+                <Button onClick={handleSaveHeroBackground} disabled={isLoadingHero}>
+                  <Save className="h-4 w-4 mr-2" />
+                  Save Background
                 </Button>
               </CardContent>
             </Card>

@@ -1,16 +1,21 @@
 import { Link } from 'react-router';
-import { Search, MapPin, Calendar, Users } from 'lucide-react';
+import { MapPin, Calendar, Users } from 'lucide-react';
 import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
 import { useEffect, useState } from 'react';
-import { getProperties, Property } from '../lib/api';
+import { getProperties, Property, getHeroSettings } from '../lib/api';
 import { PropertyCard } from '../components/PropertyCard';
 
 export function Home() {
   const [properties, setProperties] = useState<Property[]>([]);
+  const [heroBackground, setHeroBackground] = useState('https://images.unsplash.com/photo-1741991109886-90e70988f27b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxOYWlyb2JpJTIwS2VueWElMjBjaXR5c2NhcGUlMjBza3lsaW5lfGVufDF8fHx8MTc3MzAzNTM5OXww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral');
 
   useEffect(() => {
     getProperties().then((data) => setProperties(data.slice(0, 3)));
+    getHeroSettings().then((settings) => {
+      if (settings?.backgroundImage) {
+        setHeroBackground(settings.backgroundImage);
+      }
+    });
   }, []);
 
   return (
@@ -19,48 +24,17 @@ export function Home() {
       <section
         className="relative h-[600px] bg-cover bg-center"
         style={{
-          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('https://images.unsplash.com/photo-1638454668466-e8dbd5462f20?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsdXh1cnklMjBtb2Rlcm4lMjBhcGFydG1lbnQlMjBpbnRlcmlvcnxlbnwxfHx8fDE3NzMwMjgyMzF8MA&ixlib=rb-4.1.0&q=80&w=1080')`,
+          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('${heroBackground}')`,
         }}
       >
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-center text-white max-w-4xl px-4">
             <h1 className="text-5xl md:text-6xl mb-6">
-              Find Your Perfect Stay with Skyway Suites
+              Find Your Perfect Stay !
             </h1>
             <p className="text-xl mb-8">
-              Discover unique properties and unforgettable experiences around the world
+              Discover unforgettable experiences around in Nairobi and its Environs
             </p>
-            <div className="bg-white rounded-lg p-6 max-w-3xl mx-auto">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="md:col-span-2">
-                  <div className="flex items-center gap-2 border rounded-md px-3 py-2">
-                    <MapPin className="h-5 w-5 text-gray-400" />
-                    <Input
-                      type="text"
-                      placeholder="Where are you going?"
-                      className="border-0 p-0 focus-visible:ring-0"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <div className="flex items-center gap-2 border rounded-md px-3 py-2">
-                    <Calendar className="h-5 w-5 text-gray-400" />
-                    <Input
-                      type="date"
-                      className="border-0 p-0 focus-visible:ring-0"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <Link to="/properties">
-                    <Button className="w-full h-full">
-                      <Search className="h-5 w-5 mr-2" />
-                      Search
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </section>

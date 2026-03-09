@@ -2,7 +2,9 @@
 
 **Your app is 100% ready for Vercel deployment!**
 
-Follow these simple steps to get your app live in minutes.
+⚠️ **Important**: The app currently runs with **mock data** locally. To connect to your Neon database, you need to deploy to Vercel (takes 5 minutes).
+
+Follow these simple steps to get your app live with real database integration.
 
 ---
 

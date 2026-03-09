@@ -7,6 +7,7 @@ DROP TABLE IF EXISTS contact_submissions CASCADE;
 DROP TABLE IF EXISTS customers CASCADE;
 DROP TABLE IF EXISTS properties CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
+DROP TABLE IF EXISTS hero_settings CASCADE;
 
 -- Users table (for authentication)
 CREATE TABLE users (
@@ -76,6 +77,15 @@ CREATE TABLE contact_submissions (
   created_at TIMESTAMP DEFAULT NOW()
 );
 
+-- Hero settings table
+CREATE TABLE hero_settings (
+  id INTEGER PRIMARY KEY DEFAULT 1,
+  background_image TEXT,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW(),
+  CONSTRAINT single_row CHECK (id = 1)
+);
+
 -- Create indexes for better performance
 CREATE INDEX idx_bookings_property ON bookings(property_id);
 CREATE INDEX idx_bookings_customer ON bookings(customer_id);
@@ -121,6 +131,10 @@ INSERT INTO payments (booking_id, customer_id, amount, status, payment_method) V
 ((SELECT id FROM bookings LIMIT 1 OFFSET 1),
  (SELECT id FROM customers WHERE email = 'jane@example.com' LIMIT 1),
  1400.00, 'pending', 'Credit Card');
+
+-- Default hero background (Nairobi cityscape)
+INSERT INTO hero_settings (id, background_image) VALUES
+(1, 'https://images.unsplash.com/photo-1741991109886-90e70988f27b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxOYWlyb2JpJTIwS2VueWElMjBjaXR5c2NhcGUlMjBza3lsaW5lfGVufDF8fHx8MTc3MzAzNTM5OXww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral');
 
 -- Verify tables were created
 SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';
