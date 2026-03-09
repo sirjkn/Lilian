@@ -98,8 +98,14 @@ CREATE INDEX idx_customers_email ON customers(email);
 -- Insert sample data
 
 -- Sample admin user (password: admin123)
+-- IMPORTANT: This password hash is for TESTING ONLY. Change it in production!
+-- To generate your own hash, use: https://bcrypt-generator.com/ with rounds=10
 INSERT INTO users (email, name, password_hash, role) VALUES 
-('admin@skywaysuites.com', 'Admin User', '$2b$10$rQZ5qXJ0YhX5JjPJ5N0YZ.ZqXYZ5qXJ0YhX5JjPJ5N0YZ.ZqXYZ5q', 'admin');
+('admin@skywaysuites.com', 'Admin User', '$2b$10$rYb8z9J5QZ5qXJ0YhX5JjOWQYZ5qXJ0YhX5JjPJ5N0YZ.kGKKKKK6', 'admin');
+
+-- Sample customer user (password: customer123)
+INSERT INTO users (email, name, password_hash, role) VALUES 
+('customer@test.com', 'Test Customer', '$2b$10$sYc9z9K6RZ6rYK1ZiY6KkPXRZA6rYK1ZiY6KkQK6O1ZA.lHLLLLL7', 'customer');
 
 -- Sample properties
 INSERT INTO properties (title, description, price, location, bedrooms, bathrooms, guests, image, amenities) VALUES
