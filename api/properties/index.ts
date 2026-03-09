@@ -21,11 +21,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (req.method === 'POST') {
       // Create property
-      const { title, description, price, location, bedrooms, bathrooms, guests, image, amenities } = req.body;
+      const { 
+        title, 
+        description, 
+        price, 
+        location, 
+        bedrooms, 
+        bathrooms, 
+        guests, 
+        image, 
+        amenities,
+        ical_export_url,
+        airbnb_import_url,
+        booking_import_url,
+        vrbo_import_url,
+        calendar_sync_enabled
+      } = req.body;
 
       const result = await query(
-        'INSERT INTO properties (title, description, price, location, bedrooms, bathrooms, guests, image, amenities) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *',
-        [title, description, price, location, bedrooms, bathrooms, guests, image, amenities]
+        `INSERT INTO properties 
+         (title, description, price, location, bedrooms, bathrooms, guests, image, amenities,
+          ical_export_url, airbnb_import_url, booking_import_url, vrbo_import_url, calendar_sync_enabled) 
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING *`,
+        [title, description, price, location, bedrooms, bathrooms, guests, image, amenities,
+         ical_export_url, airbnb_import_url, booking_import_url, vrbo_import_url, calendar_sync_enabled]
       );
 
       return res.status(200).json(result.rows[0]);

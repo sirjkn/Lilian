@@ -14,9 +14,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     if (req.method === 'GET') {
-      // Get hero background settings
+      // Get hero background settings from new settings table
       const result = await query(
-        'SELECT background_image FROM hero_settings WHERE id = 1'
+        "SELECT value FROM settings WHERE category = 'hero' AND key = 'background_image'"
       );
 
       if (result.rows.length === 0) {
@@ -24,35 +24,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       return res.status(200).json({
-        backgroundImage: result.rows[0].background_image,
+        backgroundImage: result.rows[0].value,
       });
     } else if (req.method === 'PUT') {
-      // Update hero background settings
+      // Update hero background settings in new settings table
       const { backgroundImage } = req.body;
 
       if (!backgroundImage) {
         return res.status(400).json({ error: 'Background image URL is required' });
       }
 
-      // Try to update first, if no rows exist, insert
-      const updateResult = await query(
-        'UPDATE hero_settings SET background_image = $1 WHERE id = 1 RETURNING *',
+      // Insert or update using the new settings table
+      await query(
+        `INSERT INTO settings (category, key, value) 
+         VALUES ('hero', 'background_image', $1) 
+         ON CONFLICT (category, key) 
+         DO UPDATE SET value = $1, updated_at = CURRENT_TIMESTAMP`,
         [backgroundImage]
       );
 
-      if (updateResult.rows.length === 0) {
-        // No existing record, insert new one
-        const insertResult = await query(
-          'INSERT INTO hero_settings (id, background_image) VALUES (1, $1) RETURNING *',
-          [backgroundImage]
-        );
-        return res.status(200).json({
-          backgroundImage: insertResult.rows[0].background_image,
-        });
-      }
-
       return res.status(200).json({
-        backgroundImage: updateResult.rows[0].background_image,
+        backgroundImage: backgroundImage,
       });
     } else {
       res.setHeader('Allow', ['GET', 'PUT']);

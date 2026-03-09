@@ -32,11 +32,33 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (req.method === 'PUT') {
       // Update property
-      const { title, description, price, location, bedrooms, bathrooms, guests, image, amenities, available } = req.body;
+      const { 
+        title, 
+        description, 
+        price, 
+        location, 
+        bedrooms, 
+        bathrooms, 
+        guests, 
+        image, 
+        amenities, 
+        available,
+        ical_export_url,
+        airbnb_import_url,
+        booking_import_url,
+        vrbo_import_url,
+        calendar_sync_enabled
+      } = req.body;
 
       const result = await query(
-        'UPDATE properties SET title = $1, description = $2, price = $3, location = $4, bedrooms = $5, bathrooms = $6, guests = $7, image = $8, amenities = $9, available = $10 WHERE id = $11 RETURNING *',
-        [title, description, price, location, bedrooms, bathrooms, guests, image, amenities, available, id]
+        `UPDATE properties 
+         SET title = $1, description = $2, price = $3, location = $4, bedrooms = $5, 
+             bathrooms = $6, guests = $7, image = $8, amenities = $9, available = $10,
+             ical_export_url = $11, airbnb_import_url = $12, booking_import_url = $13,
+             vrbo_import_url = $14, calendar_sync_enabled = $15
+         WHERE id = $16 RETURNING *`,
+        [title, description, price, location, bedrooms, bathrooms, guests, image, amenities, available,
+         ical_export_url, airbnb_import_url, booking_import_url, vrbo_import_url, calendar_sync_enabled, id]
       );
 
       if (result.rows.length === 0) {
