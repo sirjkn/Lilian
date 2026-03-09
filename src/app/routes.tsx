@@ -1,4 +1,5 @@
-import { createBrowserRouter } from "react-router";
+import { createBrowserRouter, Outlet } from "react-router";
+import { AuthProvider } from "./context/AuthContext";
 import { Layout } from "./components/Layout";
 import { Home } from "./pages/Home";
 import { About } from "./pages/About";
@@ -14,30 +15,44 @@ import { AdminCustomers } from "./pages/admin/AdminCustomers";
 import { AdminPayments } from "./pages/admin/AdminPayments";
 import { AdminSettings } from "./pages/admin/AdminSettings";
 
+// Root component that provides auth context to all routes
+function Root() {
+  return (
+    <AuthProvider>
+      <Outlet />
+    </AuthProvider>
+  );
+}
+
 export const router = createBrowserRouter([
   {
-    path: "/",
-    Component: Layout,
+    element: <Root />,
     children: [
-      { index: true, Component: Home },
-      { path: "about", Component: About },
-      { path: "properties", Component: AllProperties },
-      { path: "properties/:id", Component: PropertyDetails },
-      { path: "contact", Component: Contact },
-      { path: "create-account", Component: CreateAccount },
-      { path: "login", Component: Login },
-    ],
-  },
-  {
-    path: "/admin",
-    Component: AdminLayout,
-    children: [
-      { index: true, Component: AdminProperties },
-      { path: "properties", Component: AdminProperties },
-      { path: "bookings", Component: AdminBookings },
-      { path: "customers", Component: AdminCustomers },
-      { path: "payments", Component: AdminPayments },
-      { path: "settings", Component: AdminSettings },
+      {
+        path: "/",
+        Component: Layout,
+        children: [
+          { index: true, Component: Home },
+          { path: "about", Component: About },
+          { path: "properties", Component: AllProperties },
+          { path: "properties/:id", Component: PropertyDetails },
+          { path: "contact", Component: Contact },
+          { path: "create-account", Component: CreateAccount },
+          { path: "login", Component: Login },
+        ],
+      },
+      {
+        path: "/admin",
+        Component: AdminLayout,
+        children: [
+          { index: true, Component: AdminProperties },
+          { path: "properties", Component: AdminProperties },
+          { path: "bookings", Component: AdminBookings },
+          { path: "customers", Component: AdminCustomers },
+          { path: "payments", Component: AdminPayments },
+          { path: "settings", Component: AdminSettings },
+        ],
+      },
     ],
   },
 ]);

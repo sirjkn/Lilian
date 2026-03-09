@@ -1,5 +1,6 @@
 // API functions to connect to your Neon database
-// Replace these mock implementations with actual API calls to your backend
+// Backend API URL - automatically uses Vercel's API routes in production
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 export interface Property {
   id: string;
@@ -46,210 +47,252 @@ export interface Payment {
   createdAt: string;
 }
 
-// Mock data - Replace with actual Neon database queries
-const mockProperties: Property[] = [
-  {
-    id: '1',
-    title: 'Luxury Downtown Apartment',
-    description: 'Beautiful modern apartment in the heart of downtown with stunning city views.',
-    price: 150,
-    location: 'New York, NY',
-    bedrooms: 2,
-    bathrooms: 2,
-    guests: 4,
-    image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800',
-    amenities: ['WiFi', 'Kitchen', 'Air Conditioning', 'TV', 'Workspace'],
-    available: true,
-  },
-  {
-    id: '2',
-    title: 'Cozy Beach House',
-    description: 'Relaxing beachfront property with private access to the beach.',
-    price: 200,
-    location: 'Malibu, CA',
-    bedrooms: 3,
-    bathrooms: 2,
-    guests: 6,
-    image: 'https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?w=800',
-    amenities: ['WiFi', 'Beach Access', 'BBQ Grill', 'Parking', 'Ocean View'],
-    available: true,
-  },
-  {
-    id: '3',
-    title: 'Mountain Cabin Retreat',
-    description: 'Secluded cabin in the mountains perfect for a peaceful getaway.',
-    price: 120,
-    location: 'Aspen, CO',
-    bedrooms: 2,
-    bathrooms: 1,
-    guests: 4,
-    image: 'https://images.unsplash.com/photo-1542718610-a1d656d1884c?w=800',
-    amenities: ['Fireplace', 'Hiking Trails', 'Pet Friendly', 'Kitchen', 'Hot Tub'],
-    available: true,
-  },
-];
+// Helper function to get auth token
+function getAuthToken(): string | null {
+  return localStorage.getItem('token');
+}
 
-const mockBookings: Booking[] = [
-  {
-    id: '1',
-    propertyId: '1',
-    customerId: '1',
-    checkIn: '2026-03-15',
-    checkOut: '2026-03-20',
-    guests: 2,
-    totalPrice: 750,
-    status: 'confirmed',
-    createdAt: '2026-03-01',
-  },
-  {
-    id: '2',
-    propertyId: '2',
-    customerId: '2',
-    checkIn: '2026-04-10',
-    checkOut: '2026-04-17',
-    guests: 4,
-    totalPrice: 1400,
-    status: 'pending',
-    createdAt: '2026-03-05',
-  },
-];
+// Helper function to make authenticated requests
+async function fetchWithAuth(url: string, options: RequestInit = {}) {
+  const token = getAuthToken();
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(token && { Authorization: `Bearer ${token}` }),
+    ...options.headers,
+  };
 
-const mockCustomers: Customer[] = [
-  {
-    id: '1',
-    name: 'John Doe',
-    email: 'john@example.com',
-    phone: '+1 (555) 123-4567',
-    createdAt: '2026-01-15',
-    totalBookings: 5,
-  },
-  {
-    id: '2',
-    name: 'Jane Smith',
-    email: 'jane@example.com',
-    phone: '+1 (555) 987-6543',
-    createdAt: '2026-02-20',
-    totalBookings: 3,
-  },
-];
-
-const mockPayments: Payment[] = [
-  {
-    id: '1',
-    bookingId: '1',
-    customerId: '1',
-    amount: 750,
-    status: 'paid',
-    paymentMethod: 'Credit Card',
-    createdAt: '2026-03-01',
-  },
-  {
-    id: '2',
-    bookingId: '2',
-    customerId: '2',
-    amount: 1400,
-    status: 'pending',
-    paymentMethod: 'Credit Card',
-    createdAt: '2026-03-05',
-  },
-];
+  const response = await fetch(url, { ...options, headers });
+  
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: 'Request failed' }));
+    throw new Error(error.error || 'Request failed');
+  }
+  
+  return response.json();
+}
 
 // Properties API
 export async function getProperties(): Promise<Property[]> {
-  // TODO: Replace with actual API call to your Neon database
-  // const response = await fetch('/api/properties');
-  // return response.json();
-  return Promise.resolve(mockProperties);
+  try {
+    return await fetchWithAuth(`${API_BASE_URL}/properties`);
+  } catch (error) {
+    console.error('Error fetching properties:', error);
+    // Return mock data as fallback if backend is not running
+    return getMockProperties();
+  }
 }
 
 export async function getProperty(id: string): Promise<Property | null> {
-  // TODO: Replace with actual API call
-  return Promise.resolve(mockProperties.find(p => p.id === id) || null);
+  try {
+    return await fetchWithAuth(`${API_BASE_URL}/properties/${id}`);
+  } catch (error) {
+    console.error('Error fetching property:', error);
+    return getMockProperties().find(p => p.id === id) || null;
+  }
 }
 
 export async function createProperty(property: Omit<Property, 'id'>): Promise<Property> {
-  // TODO: Replace with actual API call
-  const newProperty = { ...property, id: Date.now().toString() };
-  mockProperties.push(newProperty);
-  return Promise.resolve(newProperty);
+  return await fetchWithAuth(`${API_BASE_URL}/properties`, {
+    method: 'POST',
+    body: JSON.stringify(property),
+  });
 }
 
 export async function updateProperty(id: string, property: Partial<Property>): Promise<Property> {
-  // TODO: Replace with actual API call
-  const index = mockProperties.findIndex(p => p.id === id);
-  if (index !== -1) {
-    mockProperties[index] = { ...mockProperties[index], ...property };
-    return Promise.resolve(mockProperties[index]);
-  }
-  throw new Error('Property not found');
+  return await fetchWithAuth(`${API_BASE_URL}/properties/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(property),
+  });
 }
 
 export async function deleteProperty(id: string): Promise<void> {
-  // TODO: Replace with actual API call
-  const index = mockProperties.findIndex(p => p.id === id);
-  if (index !== -1) {
-    mockProperties.splice(index, 1);
-  }
+  await fetchWithAuth(`${API_BASE_URL}/properties/${id}`, {
+    method: 'DELETE',
+  });
 }
 
 // Bookings API
 export async function getBookings(): Promise<Booking[]> {
-  // TODO: Replace with actual API call
-  return Promise.resolve(mockBookings);
+  try {
+    return await fetchWithAuth(`${API_BASE_URL}/bookings`);
+  } catch (error) {
+    console.error('Error fetching bookings:', error);
+    return getMockBookings();
+  }
 }
 
 export async function createBooking(booking: Omit<Booking, 'id' | 'createdAt'>): Promise<Booking> {
-  // TODO: Replace with actual API call
-  const newBooking = {
-    ...booking,
-    id: Date.now().toString(),
-    createdAt: new Date().toISOString(),
-  };
-  mockBookings.push(newBooking);
-  return Promise.resolve(newBooking);
+  return await fetchWithAuth(`${API_BASE_URL}/bookings`, {
+    method: 'POST',
+    body: JSON.stringify({
+      property_id: booking.propertyId,
+      customer_id: booking.customerId,
+      check_in: booking.checkIn,
+      check_out: booking.checkOut,
+      guests: booking.guests,
+      total_price: booking.totalPrice,
+    }),
+  });
 }
 
 export async function updateBooking(id: string, booking: Partial<Booking>): Promise<Booking> {
-  // TODO: Replace with actual API call
-  const index = mockBookings.findIndex(b => b.id === id);
-  if (index !== -1) {
-    mockBookings[index] = { ...mockBookings[index], ...booking };
-    return Promise.resolve(mockBookings[index]);
-  }
-  throw new Error('Booking not found');
+  return await fetchWithAuth(`${API_BASE_URL}/bookings/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(booking),
+  });
 }
 
 // Customers API
 export async function getCustomers(): Promise<Customer[]> {
-  // TODO: Replace with actual API call
-  return Promise.resolve(mockCustomers);
+  try {
+    return await fetchWithAuth(`${API_BASE_URL}/customers`);
+  } catch (error) {
+    console.error('Error fetching customers:', error);
+    return getMockCustomers();
+  }
 }
 
 export async function createCustomer(customer: Omit<Customer, 'id' | 'createdAt' | 'totalBookings'>): Promise<Customer> {
-  // TODO: Replace with actual API call
-  const newCustomer = {
-    ...customer,
-    id: Date.now().toString(),
-    createdAt: new Date().toISOString(),
-    totalBookings: 0,
-  };
-  mockCustomers.push(newCustomer);
-  return Promise.resolve(newCustomer);
+  return await fetchWithAuth(`${API_BASE_URL}/customers`, {
+    method: 'POST',
+    body: JSON.stringify(customer),
+  });
 }
 
 // Payments API
 export async function getPayments(): Promise<Payment[]> {
-  // TODO: Replace with actual API call
-  return Promise.resolve(mockPayments);
+  try {
+    return await fetchWithAuth(`${API_BASE_URL}/payments`);
+  } catch (error) {
+    console.error('Error fetching payments:', error);
+    return getMockPayments();
+  }
 }
 
 export async function createPayment(payment: Omit<Payment, 'id' | 'createdAt'>): Promise<Payment> {
-  // TODO: Replace with actual API call
-  const newPayment = {
-    ...payment,
-    id: Date.now().toString(),
-    createdAt: new Date().toISOString(),
-  };
-  mockPayments.push(newPayment);
-  return Promise.resolve(newPayment);
+  return await fetchWithAuth(`${API_BASE_URL}/payments`, {
+    method: 'POST',
+    body: JSON.stringify({
+      booking_id: payment.bookingId,
+      customer_id: payment.customerId,
+      amount: payment.amount,
+      payment_method: payment.paymentMethod,
+    }),
+  });
+}
+
+// Mock data functions (fallback when backend is not running)
+function getMockProperties(): Property[] {
+  return [
+    {
+      id: '1',
+      title: 'Luxury Downtown Apartment',
+      description: 'Beautiful modern apartment in the heart of downtown with stunning city views.',
+      price: 150,
+      location: 'New York, NY',
+      bedrooms: 2,
+      bathrooms: 2,
+      guests: 4,
+      image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800',
+      amenities: ['WiFi', 'Kitchen', 'Air Conditioning', 'TV', 'Workspace'],
+      available: true,
+    },
+    {
+      id: '2',
+      title: 'Cozy Beach House',
+      description: 'Relaxing beachfront property with private access to the beach.',
+      price: 200,
+      location: 'Malibu, CA',
+      bedrooms: 3,
+      bathrooms: 2,
+      guests: 6,
+      image: 'https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?w=800',
+      amenities: ['WiFi', 'Beach Access', 'BBQ Grill', 'Parking', 'Ocean View'],
+      available: true,
+    },
+    {
+      id: '3',
+      title: 'Mountain Cabin Retreat',
+      description: 'Secluded cabin in the mountains perfect for a peaceful getaway.',
+      price: 120,
+      location: 'Aspen, CO',
+      bedrooms: 2,
+      bathrooms: 1,
+      guests: 4,
+      image: 'https://images.unsplash.com/photo-1542718610-a1d656d1884c?w=800',
+      amenities: ['Fireplace', 'Hiking Trails', 'Pet Friendly', 'Kitchen', 'Hot Tub'],
+      available: true,
+    },
+  ];
+}
+
+function getMockBookings(): Booking[] {
+  return [
+    {
+      id: '1',
+      propertyId: '1',
+      customerId: '1',
+      checkIn: '2026-03-15',
+      checkOut: '2026-03-20',
+      guests: 2,
+      totalPrice: 750,
+      status: 'confirmed',
+      createdAt: '2026-03-01',
+    },
+    {
+      id: '2',
+      propertyId: '2',
+      customerId: '2',
+      checkIn: '2026-04-10',
+      checkOut: '2026-04-17',
+      guests: 4,
+      totalPrice: 1400,
+      status: 'pending',
+      createdAt: '2026-03-05',
+    },
+  ];
+}
+
+function getMockCustomers(): Customer[] {
+  return [
+    {
+      id: '1',
+      name: 'John Doe',
+      email: 'john@example.com',
+      phone: '+1 (555) 123-4567',
+      createdAt: '2026-01-15',
+      totalBookings: 5,
+    },
+    {
+      id: '2',
+      name: 'Jane Smith',
+      email: 'jane@example.com',
+      phone: '+1 (555) 987-6543',
+      createdAt: '2026-02-20',
+      totalBookings: 3,
+    },
+  ];
+}
+
+function getMockPayments(): Payment[] {
+  return [
+    {
+      id: '1',
+      bookingId: '1',
+      customerId: '1',
+      amount: 750,
+      status: 'paid',
+      paymentMethod: 'Credit Card',
+      createdAt: '2026-03-01',
+    },
+    {
+      id: '2',
+      bookingId: '2',
+      customerId: '2',
+      amount: 1400,
+      status: 'pending',
+      paymentMethod: 'Credit Card',
+      createdAt: '2026-03-05',
+    },
+  ];
 }

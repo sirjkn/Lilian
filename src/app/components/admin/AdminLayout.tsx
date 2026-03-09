@@ -43,12 +43,19 @@ export function AdminLayout() {
       {/* Sidebar */}
       <aside className="w-64 bg-gray-900 text-white flex flex-col">
         <div className="p-6 border-b border-gray-800">
-          <Link to="/" className="flex items-center gap-2">
+          <Link to="/" className="flex items-center gap-2 mb-4 hover:text-[#C9B99B] transition-colors">
             <Building2 className="h-8 w-8 text-[#C9B99B]" />
             <div>
               <div className="font-semibold">Skyway Suites</div>
               <div className="text-xs text-gray-400">Admin Dashboard</div>
             </div>
+          </Link>
+          <Link 
+            to="/" 
+            className="flex items-center gap-2 text-sm text-[#C9B99B] hover:text-white transition-colors"
+          >
+            <Home className="h-4 w-4" />
+            Back to Home
           </Link>
         </div>
 
