@@ -102,7 +102,7 @@ export async function getProperties(): Promise<Property[]> {
 
 export async function getProperty(id: string): Promise<Property | null> {
   try {
-    return await fetchWithAuth(`${API_BASE_URL}/properties/${id}`);
+    return await fetchWithAuth(`${API_BASE_URL}/properties?id=${id}`);
   } catch (error) {
     // Silently use mock data when backend is not available
     return getMockProperties().find(p => p.id === id) || null;
@@ -117,14 +117,14 @@ export async function createProperty(property: Omit<Property, 'id'>): Promise<Pr
 }
 
 export async function updateProperty(id: string, property: Partial<Property>): Promise<Property> {
-  return await fetchWithAuth(`${API_BASE_URL}/properties/${id}`, {
+  return await fetchWithAuth(`${API_BASE_URL}/properties?id=${id}`, {
     method: 'PUT',
     body: JSON.stringify(property),
   });
 }
 
 export async function deleteProperty(id: string): Promise<void> {
-  return await fetchWithAuth(`${API_BASE_URL}/properties/${id}`, {
+  return await fetchWithAuth(`${API_BASE_URL}/properties?id=${id}`, {
     method: 'DELETE',
   });
 }
@@ -154,14 +154,14 @@ export async function createBooking(booking: Omit<Booking, 'id' | 'createdAt'>):
 }
 
 export async function updateBooking(id: string, booking: Partial<Booking>): Promise<Booking> {
-  return await fetchWithAuth(`${API_BASE_URL}/bookings/${id}`, {
+  return await fetchWithAuth(`${API_BASE_URL}/bookings?id=${id}`, {
     method: 'PUT',
     body: JSON.stringify(booking),
   });
 }
 
 export async function deleteBooking(id: string): Promise<void> {
-  return await fetchWithAuth(`${API_BASE_URL}/bookings/${id}`, {
+  return await fetchWithAuth(`${API_BASE_URL}/bookings?id=${id}`, {
     method: 'DELETE',
   });
 }
@@ -184,14 +184,14 @@ export async function createCustomer(customer: Omit<Customer, 'id' | 'createdAt'
 }
 
 export async function updateCustomer(id: string, customer: Partial<Omit<Customer, 'id' | 'createdAt' | 'totalBookings'>>): Promise<Customer> {
-  return await fetchWithAuth(`${API_BASE_URL}/customers/${id}`, {
+  return await fetchWithAuth(`${API_BASE_URL}/customers?id=${id}`, {
     method: 'PUT',
     body: JSON.stringify(customer),
   });
 }
 
 export async function deleteCustomer(id: string): Promise<void> {
-  return await fetchWithAuth(`${API_BASE_URL}/customers/${id}`, {
+  return await fetchWithAuth(`${API_BASE_URL}/customers?id=${id}`, {
     method: 'DELETE',
   });
 }
@@ -337,7 +337,7 @@ function getMockPayments(): Payment[] {
 // Hero Settings API
 export async function getHeroSettings(): Promise<HeroSettings | null> {
   try {
-    return await fetchWithAuth(`${API_BASE_URL}/settings/hero`);
+    return await fetchWithAuth(`${API_BASE_URL}/settings?category=hero`);
   } catch (error) {
     // Return null when backend is not available
     return null;
@@ -345,7 +345,7 @@ export async function getHeroSettings(): Promise<HeroSettings | null> {
 }
 
 export async function updateHeroSettings(settings: HeroSettings): Promise<HeroSettings> {
-  return await fetchWithAuth(`${API_BASE_URL}/settings/hero`, {
+  return await fetchWithAuth(`${API_BASE_URL}/settings?category=hero`, {
     method: 'PUT',
     body: JSON.stringify(settings),
   });

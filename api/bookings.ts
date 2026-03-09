@@ -1,11 +1,11 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { query } from '../config/db';
+import { query } from './config/db';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') {
@@ -13,14 +13,48 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
+    const { id } = req.query;
+
+    // Single booking operations (when ID is provided)
+    if (id && typeof id === 'string') {
+      if (req.method === 'GET') {
+        const result = await query('SELECT * FROM bookings WHERE id = $1', [id]);
+
+        if (result.rows.length === 0) {
+          return res.status(404).json({ error: 'Booking not found' });
+        }
+
+        return res.status(200).json(result.rows[0]);
+      }
+
+      if (req.method === 'PUT') {
+        const { status } = req.body;
+
+        const result = await query(
+          'UPDATE bookings SET status = $1 WHERE id = $2 RETURNING *',
+          [status, id]
+        );
+
+        if (result.rows.length === 0) {
+          return res.status(404).json({ error: 'Booking not found' });
+        }
+
+        return res.status(200).json(result.rows[0]);
+      }
+
+      if (req.method === 'DELETE') {
+        await query('DELETE FROM bookings WHERE id = $1', [id]);
+        return res.status(200).json({ message: 'Booking deleted successfully' });
+      }
+    }
+
+    // Collection operations (when no ID is provided)
     if (req.method === 'GET') {
-      // Get all bookings
       const result = await query('SELECT * FROM bookings ORDER BY created_at DESC');
       return res.status(200).json(result.rows);
     }
 
     if (req.method === 'POST') {
-      // Create booking
       const { property_id, customer_id, check_in, check_out, guests, total_price } = req.body;
 
       const result = await query(
