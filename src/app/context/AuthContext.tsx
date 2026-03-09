@@ -43,29 +43,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (!response.ok) {
-        throw new Error('Login failed');
-      }
-
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        throw new Error('Invalid response format');
+        const errorData = await response.json().catch(() => ({ error: 'Login failed' }));
+        throw new Error(errorData.error || 'Login failed');
       }
 
       const data = await response.json();
+      
+      if (!data.user || !data.token) {
+        throw new Error('Invalid response from server');
+      }
+      
       setUser(data.user);
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
     } catch (error) {
       console.error('Login error:', error);
-      // Fallback to mock login if backend is not running
-      const mockUser = {
-        id: '1',
-        email,
-        name: email.split('@')[0],
-        role: email.includes('admin') ? 'admin' : 'customer',
-      } as User;
-      setUser(mockUser);
-      localStorage.setItem('user', JSON.stringify(mockUser));
+      throw error; // Re-throw to show actual error to user
     }
   };
 
@@ -78,29 +71,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (!response.ok) {
-        throw new Error('Signup failed');
-      }
-
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        throw new Error('Invalid response format');
+        const errorData = await response.json().catch(() => ({ error: 'Signup failed' }));
+        throw new Error(errorData.error || 'Signup failed');
       }
 
       const data = await response.json();
+      
+      if (!data.user || !data.token) {
+        throw new Error('Invalid response from server');
+      }
+      
       setUser(data.user);
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
     } catch (error) {
       console.error('Signup error:', error);
-      // Fallback to mock signup if backend is not running
-      const mockUser = {
-        id: '1',
-        email,
-        name,
-        role: 'customer',
-      } as User;
-      setUser(mockUser);
-      localStorage.setItem('user', JSON.stringify(mockUser));
+      throw error; // Re-throw to show actual error to user
     }
   };
 

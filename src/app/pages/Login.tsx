@@ -20,7 +20,9 @@ export function Login() {
       toast.success('Login successful!');
       navigate('/');
     } catch (error) {
-      toast.error('Login failed. Please check your credentials.');
+      const errorMessage = error instanceof Error ? error.message : 'Login failed. Please check your credentials.';
+      toast.error(errorMessage);
+      console.error('Login error:', error);
     }
   };
 
@@ -73,9 +75,9 @@ export function Login() {
           </div>
 
           <div className="mt-4 p-3 bg-[#F5F3F0] rounded-md text-sm text-gray-600">
-            <p className="mb-1"><strong>Demo accounts:</strong></p>
-            <p>Admin: admin@example.com (any password)</p>
-            <p>Customer: user@example.com (any password)</p>
+            <p className="mb-1"><strong>Demo account:</strong></p>
+            <p>Email: admin@skywaysuites.com</p>
+            <p>Password: admin123</p>
           </div>
         </CardContent>
       </Card>
