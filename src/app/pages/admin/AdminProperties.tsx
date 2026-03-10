@@ -77,13 +77,20 @@ export function AdminProperties() {
         image: formData.image || 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800',
         amenities: formData.amenities.split(',').map(a => a.trim()),
         available: true,
+        icalUrl: '',
+        airbnbCalendarUrl: '',
+        bookingCalendarUrl: '',
+        vrboCalendarUrl: '',
+        calendarSyncEnabled: false,
       });
       toast.success('Property added successfully!');
       setShowAddDialog(false);
       resetForm();
       loadProperties();
     } catch (error) {
-      toast.error('Failed to add property');
+      console.error('Add property error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to add property';
+      toast.error(`Failed to add property: ${errorMessage}`);
     }
   };
 
