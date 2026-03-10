@@ -80,6 +80,17 @@ export interface User {
   status: string;
 }
 
+export interface Review {
+  id: string;
+  bookingId: string;
+  customerId: string;
+  propertyId: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+  customerName?: string;
+}
+
 // Helper function to get auth token
 function getAuthToken(): string | null {
   return localStorage.getItem('token');
@@ -489,6 +500,59 @@ export async function updateUser(id: string, user: { email?: string; name?: stri
 
 export async function deleteUser(id: string): Promise<void> {
   return await fetchWithAuth(`${API_BASE_URL}?endpoint=users&id=${id}`, {
+    method: 'DELETE',
+  });
+}
+
+// Reviews API
+export async function getReviews(propertyId?: string): Promise<Review[]> {
+  try {
+    const url = propertyId 
+      ? `${API_BASE_URL}?endpoint=reviews&propertyId=${propertyId}`
+      : `${API_BASE_URL}?endpoint=reviews`;
+    const result = await fetchWithAuth(url);
+    return result || [];
+  } catch (error) {
+    if (error instanceof Error && (error.message === 'PREVIEW_MODE' || error.message === 'API_NOT_DEPLOYED')) {
+      return [];
+    }
+    if (isProduction()) {
+      console.error('Failed to fetch reviews:', error);
+    }
+    return [];
+  }
+}
+
+export async function getReviewByBooking(bookingId: string): Promise<Review | null> {
+  try {
+    return await fetchWithAuth(`${API_BASE_URL}?endpoint=reviews&bookingId=${bookingId}`);
+  } catch (error) {
+    if (error instanceof Error && (error.message === 'PREVIEW_MODE' || error.message === 'API_NOT_DEPLOYED')) {
+      return null;
+    }
+    if (isProduction()) {
+      console.error('Failed to fetch review:', error);
+    }
+    return null;
+  }
+}
+
+export async function createReview(review: Omit<Review, 'id' | 'createdAt' | 'customerName'>): Promise<Review> {
+  return await fetchWithAuth(`${API_BASE_URL}?endpoint=reviews`, {
+    method: 'POST',
+    body: JSON.stringify(review),
+  });
+}
+
+export async function updateReview(id: string, review: { rating?: number; comment?: string }): Promise<Review> {
+  return await fetchWithAuth(`${API_BASE_URL}?endpoint=reviews&id=${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(review),
+  });
+}
+
+export async function deleteReview(id: string): Promise<void> {
+  return await fetchWithAuth(`${API_BASE_URL}?endpoint=reviews&id=${id}`, {
     method: 'DELETE',
   });
 }

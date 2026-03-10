@@ -15,7 +15,7 @@ import { UsersManagement } from '../../components/UsersManagement';
 
 export function AdminSettings() {
   const [activeTab, setActiveTab] = useState('general');
-  const [heroBackgroundUrl, setHeroBackgroundUrl] = useState('');
+  const [heroBackgroundUrl, setHeroBackgroundUrl] = useState('https://res.cloudinary.com/dc5d5zfos/image/upload/v1773134775/skyway-suites/yndkhqpgcxknpro3tjjd.webp');
   const [isLoadingHero, setIsLoadingHero] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadPreview, setUploadPreview] = useState('');
