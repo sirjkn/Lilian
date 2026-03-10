@@ -1,22 +1,22 @@
 import { Pool } from 'pg';
+import { ENV } from './env';
 
 // Singleton connection pool
 let pool: Pool | null = null;
 
 export function getPool(): Pool {
   if (!pool) {
-    // Hardcoded Neon connection string (can be overridden by DATABASE_URL env var)
-    const defaultConnectionString = 'postgresql://neondb_owner:npg_aJ8wfM4RIeTQ@ep-floral-leaf-ag3dpaau-pooler.c-2.eu-central-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require';
-    
     pool = new Pool({
-      connectionString: process.env.DATABASE_URL || defaultConnectionString,
+      connectionString: process.env.DATABASE_URL || ENV.DATABASE_URL,
       ssl: {
         rejectUnauthorized: false
       },
-      max: 10,
-      idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 2000,
+      max: ENV.DB_POOL.max,
+      idleTimeoutMillis: ENV.DB_POOL.idleTimeoutMillis,
+      connectionTimeoutMillis: ENV.DB_POOL.connectionTimeoutMillis,
     });
+    
+    console.log('✅ Database pool initialized with Neon PostgreSQL');
   }
   return pool;
 }

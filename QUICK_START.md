@@ -1,20 +1,26 @@
 # 🚀 Skyway Suites - Quick Start Guide
 
-## ⚡ 5-Minute Setup
+## ⚡ 2-Minute Setup (Credentials Already Hardcoded!)
 
-Your Skyway Suites app is configured for **real-time database connectivity**. Follow these steps to get it running:
+Your Skyway Suites app has **credentials already hardcoded** - no environment variable setup needed! Just create the database tables and you're ready to go.
 
 ---
 
-## Step 1: Create Neon Database (2 minutes)
+## Step 1: ✅ Database & JWT Credentials (DONE!)
 
-1. Go to [neon.tech](https://neon.tech)
-2. Click **"Sign Up"** or **"Login"**
-3. Create new project: **"Skyway Suites"**
-4. Copy your connection string (looks like this):
-   ```
-   postgresql://user:password@host.neon.tech/database
-   ```
+**Already configured:**
+```
+✅ DATABASE_URL - Hardcoded in /api/config/env.ts
+✅ JWT_SECRET - Hardcoded in /api/config/env.ts
+✅ PORT - Set to 3000
+```
+
+**Your Neon Database:**
+- Host: `ep-floral-leaf-ag3dpaau-pooler.c-2.eu-central-1.aws.neon.tech`
+- Database: `neondb`
+- User: `neondb_owner`
+
+**No action needed!** Skip to Step 2.
 
 ---
 
@@ -107,12 +113,12 @@ You'll need to generate a password hash first. For now, use Option A.
 
 ---
 
-## Step 4: Deploy to Vercel (1 minute)
+## Step 4: Deploy to Vercel (30 seconds)
 
 1. Push your code to GitHub:
    ```bash
    git add .
-   git commit -m "Initial commit"
+   git commit -m "Deploy Skyway Suites"
    git push origin main
    ```
 
@@ -121,25 +127,22 @@ You'll need to generate a password hash first. For now, use Option A.
 4. Select your GitHub repository
 5. Click **"Deploy"**
 
+**That's it!** Credentials are already hardcoded, so it works immediately.
+
 ---
 
-## Step 5: Set Environment Variables (30 seconds)
+## Step 5: (Optional) Override Credentials in Vercel
+
+**Not required!** The hardcoded credentials work fine. But if you want to use different credentials in production:
 
 In Vercel dashboard:
-
 1. Go to **Settings** → **Environment Variables**
-2. Add these variables:
+2. Add (optional):
+   - `DATABASE_URL` = Different database URL
+   - `JWT_SECRET` = Different secret key
+3. Redeploy
 
-   **Name:** `DATABASE_URL`  
-   **Value:** Your Neon connection string  
-   (Example: `postgresql://user:pass@host.neon.tech/db`)
-
-   **Name:** `JWT_SECRET`  
-   **Value:** Any random string  
-   (Example: `my-super-secret-key-change-this-in-production`)
-
-3. Click **"Save"**
-4. Redeploy: **Deployments** → **⋮** → **Redeploy**
+The app will use environment variables if set, otherwise falls back to hardcoded values.
 
 ---
 
