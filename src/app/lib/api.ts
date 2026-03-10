@@ -49,6 +49,7 @@ export interface Property {
   guests: number;
   category: string;
   image: string;
+  photos?: string[]; // Additional property photos for gallery
   amenities: string[];
   available: boolean;
   averageRating?: number;

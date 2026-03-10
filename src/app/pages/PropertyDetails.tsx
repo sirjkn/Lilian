@@ -15,6 +15,7 @@ import { Input } from '../components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'sonner';
+import { PhotoGallery } from '../components/PhotoGallery';
 
 export function PropertyDetails() {
   const { id } = useParams<{ id: string }>();
@@ -254,11 +255,14 @@ export function PropertyDetails() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Property Details */}
           <div className="lg:col-span-2">
-            {/* Image - Same width as title */}
-            <div
-              className="h-96 rounded-lg bg-cover bg-center mb-8"
-              style={{ backgroundImage: `url('${property.image}')` }}
-            />
+            {/* Main Image */}
+            <div className="mb-6 rounded-lg overflow-hidden">
+              <img 
+                src={property.image} 
+                alt={property.title} 
+                className="w-full h-96 object-cover"
+              />
+            </div>
             
             {/* Booking Status Banner */}
             {currentBooking && (
@@ -311,7 +315,7 @@ export function PropertyDetails() {
 
             <div>
               <h2 className="text-2xl mb-4">Amenities</h2>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-4 mb-8">
                 {property.amenities && property.amenities.length > 0 ? (
                   property.amenities.map((amenity) => (
                     <div key={amenity} className="flex items-center gap-2">
@@ -323,6 +327,14 @@ export function PropertyDetails() {
                   <p className="text-gray-500 col-span-2">No amenities listed</p>
                 )}
               </div>
+
+              {/* Photo Gallery */}
+              {property.photos && property.photos.length > 0 && (
+                <div className="mt-8">
+                  <h2 className="text-2xl mb-4">Property Photos</h2>
+                  <PhotoGallery photos={property.photos} />
+                </div>
+              )}
             </div>
           </div>
 
