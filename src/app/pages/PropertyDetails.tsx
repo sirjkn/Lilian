@@ -22,6 +22,8 @@ export function PropertyDetails() {
   const navigate = useNavigate();
   const [property, setProperty] = useState<Property | null>(null);
   const [currentBooking, setCurrentBooking] = useState<Booking | null>(null);
+  const [airbnbConflict, setAirbnbConflict] = useState<{ hasConflict: boolean; availableDate?: string }>({ hasConflict: false });
+  const [checkingAirbnb, setCheckingAirbnb] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -77,6 +79,35 @@ export function PropertyDetails() {
     fetchProperty();
   }, [id]);
 
+  // Check Airbnb availability when dates change
+  useEffect(() => {
+    async function checkAirbnb() {
+      if (!property || !checkIn || !checkOut) {
+        setAirbnbConflict({ hasConflict: false });
+        return;
+      }
+
+      const numberOfDays = Math.ceil((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / (1000 * 60 * 60 * 24));
+      if (numberOfDays <= 0) {
+        setAirbnbConflict({ hasConflict: false });
+        return;
+      }
+
+      setCheckingAirbnb(true);
+      const airbnbCheck = await checkAirbnbAvailability(property, checkIn, checkOut);
+      setCheckingAirbnb(false);
+
+      if (!airbnbCheck.available && airbnbCheck.conflictDate) {
+        const availableDate = new Date(airbnbCheck.conflictDate).toLocaleDateString();
+        setAirbnbConflict({ hasConflict: true, availableDate });
+      } else {
+        setAirbnbConflict({ hasConflict: false });
+      }
+    }
+
+    checkAirbnb();
+  }, [property, checkIn, checkOut]);
+
   const handleBooking = async () => {
     if (!user) {
       toast.error('Please login to make a booking');
@@ -102,20 +133,6 @@ export function PropertyDetails() {
       toast.error(`Property Booked, Available after ${availableDate}`, {
         style: {
           background: '#DC2626',
-          color: 'white',
-        },
-        duration: 5000,
-      });
-      return;
-    }
-    
-    // Check Airbnb calendar availability
-    const airbnbCheck = await checkAirbnbAvailability(property, checkIn, checkOut);
-    if (!airbnbCheck.available && airbnbCheck.conflictDate) {
-      const availableDate = new Date(airbnbCheck.conflictDate).toLocaleDateString();
-      toast.error(`Property Booked in AirBNB, Available after ${availableDate}`, {
-        style: {
-          background: '#F59E0B',
           color: 'white',
         },
         duration: 5000,
@@ -317,6 +334,30 @@ export function PropertyDetails() {
                       max={property.guests}
                     />
                   </div>
+
+                  {/* Airbnb Conflict Warning - Inline */}
+                  {checkingAirbnb && (
+                    <div className="bg-amber-50 border-l-4 border-amber-500 p-3 rounded-md">
+                      <div className="flex items-center gap-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-amber-500 border-t-transparent"></div>
+                        <p className="text-sm text-amber-800">Checking Airbnb availability...</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {airbnbConflict.hasConflict && !checkingAirbnb && (
+                    <div className="bg-amber-50 border-l-4 border-amber-500 p-3 rounded-md">
+                      <div className="flex items-start gap-2">
+                        <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                        <div>
+                          <p className="font-semibold text-amber-800 text-sm">Property Booked in AirBNB</p>
+                          <p className="text-xs text-amber-700 mt-1">
+                            Available after {airbnbConflict.availableDate}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Discount Information Banner */}
                   <div className="bg-[#6B7C3C]/10 border border-[#6B7C3C]/20 rounded-lg p-3">
