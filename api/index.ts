@@ -122,29 +122,94 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // PROPERTIES ENDPOINTS
     // ============================================
     if (endpoint === 'properties') {
-      // Single property operations
+      // Item operations
       if (id && typeof id === 'string') {
-        if (req.method === 'GET') {
-          const result = await query('SELECT * FROM properties WHERE id = $1', [id]);
-          if (result.rows.length === 0) {
-            return res.status(404).json({ error: 'Property not found' });
-          }
-          return res.status(200).json(transformProperty(result.rows[0]));
-        }
-
         if (req.method === 'PUT') {
-          const { title, description, price, location, bedrooms, bathrooms, guests, category, image, amenities, available,
-            ical_export_url, airbnb_import_url, booking_import_url, vrbo_import_url, calendar_sync_enabled } = req.body;
+          // Support partial updates - only update fields that are provided
+          const updates: string[] = [];
+          const values: any[] = [];
+          let paramIndex = 1;
+          
+          const fields = req.body;
+          
+          // Build dynamic UPDATE query based on provided fields
+          if (fields.title !== undefined) {
+            updates.push(`title = $${paramIndex++}`);
+            values.push(fields.title);
+          }
+          if (fields.description !== undefined) {
+            updates.push(`description = $${paramIndex++}`);
+            values.push(fields.description);
+          }
+          if (fields.price !== undefined) {
+            updates.push(`price = $${paramIndex++}`);
+            values.push(fields.price);
+          }
+          if (fields.location !== undefined) {
+            updates.push(`location = $${paramIndex++}`);
+            values.push(fields.location);
+          }
+          if (fields.bedrooms !== undefined) {
+            updates.push(`bedrooms = $${paramIndex++}`);
+            values.push(fields.bedrooms);
+          }
+          if (fields.bathrooms !== undefined) {
+            updates.push(`bathrooms = $${paramIndex++}`);
+            values.push(fields.bathrooms);
+          }
+          if (fields.guests !== undefined) {
+            updates.push(`guests = $${paramIndex++}`);
+            values.push(fields.guests);
+          }
+          if (fields.category !== undefined) {
+            updates.push(`category = $${paramIndex++}`);
+            values.push(fields.category);
+          }
+          if (fields.image !== undefined) {
+            updates.push(`image = $${paramIndex++}`);
+            values.push(fields.image);
+          }
+          if (fields.amenities !== undefined) {
+            updates.push(`amenities = $${paramIndex++}`);
+            values.push(fields.amenities);
+          }
+          if (fields.available !== undefined) {
+            updates.push(`available = $${paramIndex++}`);
+            values.push(fields.available);
+          }
+          if (fields.ical_export_url !== undefined) {
+            updates.push(`ical_export_url = $${paramIndex++}`);
+            values.push(fields.ical_export_url);
+          }
+          if (fields.airbnb_import_url !== undefined) {
+            updates.push(`airbnb_import_url = $${paramIndex++}`);
+            values.push(fields.airbnb_import_url);
+          }
+          if (fields.booking_import_url !== undefined) {
+            updates.push(`booking_import_url = $${paramIndex++}`);
+            values.push(fields.booking_import_url);
+          }
+          if (fields.vrbo_import_url !== undefined) {
+            updates.push(`vrbo_import_url = $${paramIndex++}`);
+            values.push(fields.vrbo_import_url);
+          }
+          if (fields.calendar_sync_enabled !== undefined) {
+            updates.push(`calendar_sync_enabled = $${paramIndex++}`);
+            values.push(fields.calendar_sync_enabled);
+          }
+          
+          if (updates.length === 0) {
+            return res.status(400).json({ error: 'No fields to update' });
+          }
+          
+          // Add id as the last parameter
+          values.push(id);
+          
           const result = await query(
-            `UPDATE properties 
-             SET title = $1, description = $2, price = $3, location = $4, bedrooms = $5, 
-                 bathrooms = $6, guests = $7, category = $8, image = $9, amenities = $10, available = $11,
-                 ical_export_url = $12, airbnb_import_url = $13, booking_import_url = $14,
-                 vrbo_import_url = $15, calendar_sync_enabled = $16
-             WHERE id = $17 RETURNING *`,
-            [title, description, price, location, bedrooms, bathrooms, guests, category, image, amenities, available,
-             ical_export_url, airbnb_import_url, booking_import_url, vrbo_import_url, calendar_sync_enabled, id]
+            `UPDATE properties SET ${updates.join(', ')} WHERE id = $${paramIndex} RETURNING *`,
+            values
           );
+          
           if (result.rows.length === 0) {
             return res.status(404).json({ error: 'Property not found' });
           }

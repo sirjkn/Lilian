@@ -707,37 +707,38 @@ export function AdminProperties() {
       <Dialog.Root open={showCalendarDialog} onOpenChange={setShowCalendarDialog}>
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 bg-black/50" />
-          <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <Dialog.Title className="text-2xl mb-4">Calendar Sync & Export</Dialog.Title>
+          <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg p-4 sm:p-6 w-[95%] sm:w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <Dialog.Title className="text-xl sm:text-2xl mb-4">Calendar Sync & Export</Dialog.Title>
             <Dialog.Description className="sr-only">
               Export calendar to iCal format and import Airbnb calendar to prevent double bookings
             </Dialog.Description>
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               <div>
                 <label className="block text-sm mb-2 font-medium">Property</label>
-                <div className="font-medium text-lg">{calendarProperty?.title}</div>
+                <div className="font-medium text-base sm:text-lg">{calendarProperty?.title}</div>
                 <div className="text-sm text-gray-600">{calendarProperty?.location}</div>
               </div>
 
               {/* iCal Export */}
-              <div className="border rounded-lg p-4 bg-blue-50">
+              <div className="border rounded-lg p-3 sm:p-4 bg-blue-50">
                 <div className="flex items-center gap-2 mb-3">
-                  <Calendar className="h-5 w-5 text-blue-600" />
-                  <h3 className="font-semibold">Export Calendar (.ical)</h3>
+                  <Calendar className="h-5 w-5 text-blue-600 flex-shrink-0" />
+                  <h3 className="font-semibold text-sm sm:text-base">Export Calendar (.ical)</h3>
                 </div>
                 <p className="text-sm text-gray-700 mb-3">
                   Use this link to sync your Skyway Suites bookings with other calendar apps (Google Calendar, Apple Calendar, Outlook, etc.)
                 </p>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                   <Input
                     value={calendarProperty ? generateICalUrl(calendarProperty.id) : ''}
                     readOnly
-                    className="flex-1 bg-white"
+                    className="flex-1 bg-white text-xs sm:text-sm"
                   />
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => copyToClipboard(calendarProperty ? generateICalUrl(calendarProperty.id) : '')}
+                    className="w-full sm:w-auto"
                   >
                     <Copy className="h-4 w-4 mr-2" />
                     Copy
@@ -755,10 +756,10 @@ export function AdminProperties() {
               </div>
 
               {/* Airbnb Calendar Import */}
-              <div className="border rounded-lg p-4 bg-orange-50">
+              <div className="border rounded-lg p-3 sm:p-4 bg-orange-50">
                 <div className="flex items-center gap-2 mb-3">
-                  <LinkIcon className="h-5 w-5 text-orange-600" />
-                  <h3 className="font-semibold">Import Airbnb Calendar</h3>
+                  <LinkIcon className="h-5 w-5 text-orange-600 flex-shrink-0" />
+                  <h3 className="font-semibold text-sm sm:text-base">Import Airbnb Calendar</h3>
                 </div>
                 <p className="text-sm text-gray-700 mb-3">
                   Prevent double bookings by syncing your Airbnb calendar. This will block dates that are already booked on Airbnb.
@@ -769,7 +770,7 @@ export function AdminProperties() {
                     value={airbnbCalendarUrl}
                     onChange={(e) => setAirbnbCalendarUrl(e.target.value)}
                     placeholder="https://www.airbnb.com/calendar/ical/..."
-                    className="bg-white"
+                    className="bg-white text-xs sm:text-sm"
                   />
                 </div>
                 <div className="mt-3 p-3 bg-white rounded text-xs">
@@ -785,28 +786,28 @@ export function AdminProperties() {
               </div>
 
               {/* Double Booking Prevention Notice */}
-              <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+              <div className="p-3 sm:p-4 bg-green-50 border border-green-200 rounded-lg">
                 <div className="flex items-start gap-2">
-                  <div className="mt-0.5">
+                  <div className="mt-0.5 flex-shrink-0">
                     <svg className="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
                   <div>
-                    <h4 className="font-semibold text-green-900 mb-1">Double Booking Prevention Active</h4>
-                    <p className="text-sm text-green-800">
+                    <h4 className="font-semibold text-green-900 mb-1 text-sm sm:text-base">Double Booking Prevention Active</h4>
+                    <p className="text-xs sm:text-sm text-green-800">
                       The system automatically checks for booking conflicts. When someone tries to book a property with existing paid reservations, they will be notified that those dates are unavailable.
                     </p>
                   </div>
                 </div>
               </div>
             </div>
-            <div className="flex gap-4 pt-6">
-              <Button type="button" onClick={handleSaveCalendar}>
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4 sm:pt-6">
+              <Button type="button" onClick={handleSaveCalendar} className="w-full sm:w-auto">
                 <Save className="h-4 w-4 mr-2" />
                 Save Calendar Settings
               </Button>
-              <Button type="button" variant="outline" onClick={() => setShowCalendarDialog(false)}>
+              <Button type="button" variant="outline" onClick={() => setShowCalendarDialog(false)} className="w-full sm:w-auto">
                 Close
               </Button>
             </div>
