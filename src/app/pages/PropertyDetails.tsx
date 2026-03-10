@@ -1,7 +1,15 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate, useSearchParams } from 'react-router';
-import { MapPin, Users, Bed, Bath, Wifi, Check, Tag } from 'lucide-react';
-import { getProperty, Property, createBooking } from '../lib/api';
+import { MapPin, Users, Bed, Bath, Wifi, Check, Tag, AlertCircle } from 'lucide-react';
+import { 
+  getProperty, 
+  Property, 
+  createBooking, 
+  checkPropertyAvailability,
+  checkAirbnbAvailability,
+  getPropertyBookings,
+  Booking
+} from '../lib/api';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
@@ -13,6 +21,7 @@ export function PropertyDetails() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [property, setProperty] = useState<Property | null>(null);
+  const [currentBooking, setCurrentBooking] = useState<Booking | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -44,6 +53,18 @@ export function PropertyDetails() {
           setError('Property not found');
         } else {
           setProperty(data);
+          
+          // Check current booking status
+          const bookings = await getPropertyBookings(id);
+          const now = new Date();
+          const activeBooking = bookings.find(booking => {
+            const checkOut = new Date(booking.checkOut);
+            return checkOut > now && (booking.status === 'confirmed' || booking.status === 'pending');
+          });
+          
+          if (activeBooking) {
+            setCurrentBooking(activeBooking);
+          }
         }
       } catch (err) {
         console.error('Failed to fetch property:', err);
@@ -71,6 +92,34 @@ export function PropertyDetails() {
     
     if (numberOfDays <= 0) {
       toast.error('Check-out must be after check-in');
+      return;
+    }
+    
+    // Check Skyway Suites database availability
+    const skywayCheck = await checkPropertyAvailability(id, checkIn, checkOut);
+    if (!skywayCheck.available && skywayCheck.conflictingBooking) {
+      const availableDate = new Date(skywayCheck.conflictingBooking.checkOut).toLocaleDateString();
+      toast.error(`Property Booked, Available after ${availableDate}`, {
+        style: {
+          background: '#DC2626',
+          color: 'white',
+        },
+        duration: 5000,
+      });
+      return;
+    }
+    
+    // Check Airbnb calendar availability
+    const airbnbCheck = await checkAirbnbAvailability(property, checkIn, checkOut);
+    if (!airbnbCheck.available && airbnbCheck.conflictDate) {
+      const availableDate = new Date(airbnbCheck.conflictDate).toLocaleDateString();
+      toast.error(`Property Booked in AirBNB, Available after ${availableDate}`, {
+        style: {
+          background: '#F59E0B',
+          color: 'white',
+        },
+        duration: 5000,
+      });
       return;
     }
     
@@ -163,6 +212,21 @@ export function PropertyDetails() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Property Details */}
           <div className="lg:col-span-2">
+            {/* Booking Status Banner */}
+            {currentBooking && (
+              <div className="mb-6 bg-red-50 border-l-4 border-red-600 p-4 rounded-md">
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="h-5 w-5 text-red-600" />
+                  <div>
+                    <p className="font-semibold text-red-800">Booked</p>
+                    <p className="text-sm text-red-700">
+                      Available after {new Date(currentBooking.checkOut).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+            
             <h1 className="text-3xl mb-4">{property.title}</h1>
             
             {/* Category Badge - Charcoal black background */}

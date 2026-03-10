@@ -1,13 +1,40 @@
 import { Link } from 'react-router';
 import { MapPin, Users, Bed, Bath } from 'lucide-react';
-import { Property } from '../lib/api';
+import { Property, getPropertyBookings, Booking } from '../lib/api';
 import { Card, CardContent } from './ui/card';
+import { useEffect, useState } from 'react';
 
 interface PropertyCardProps {
   property: Property;
 }
 
 export function PropertyCard({ property }: PropertyCardProps) {
+  const [currentBooking, setCurrentBooking] = useState<Booking | null>(null);
+
+  useEffect(() => {
+    // Check if property has active bookings
+    async function checkBookingStatus() {
+      try {
+        const bookings = await getPropertyBookings(property.id);
+        const now = new Date();
+        
+        // Find current or upcoming booking
+        const activeBooking = bookings.find(booking => {
+          const checkOut = new Date(booking.checkOut);
+          return checkOut > now && (booking.status === 'confirmed' || booking.status === 'pending');
+        });
+        
+        if (activeBooking) {
+          setCurrentBooking(activeBooking);
+        }
+      } catch (error) {
+        console.error('Failed to check booking status:', error);
+      }
+    }
+    
+    checkBookingStatus();
+  }, [property.id]);
+  
   console.log('🏠 PropertyCard:', {
     id: property.id,
     title: property.title,
@@ -22,6 +49,12 @@ export function PropertyCard({ property }: PropertyCardProps) {
             className="h-48 bg-cover bg-center"
             style={{ backgroundImage: `url('${property.image}')` }}
           />
+          {/* Booked Status Badge */}
+          {currentBooking && (
+            <div className="absolute top-3 left-3 bg-red-600 text-white px-3 py-1.5 rounded-md font-semibold shadow-lg">
+              Booked
+            </div>
+          )}
           {/* Price Badge - Positioned inside photo */}
           <div className="absolute bottom-3 right-3 bg-red-600 text-white px-3 py-1.5 rounded-md font-semibold shadow-lg">
             ${property.price}/night

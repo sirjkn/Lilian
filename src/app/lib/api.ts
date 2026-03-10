@@ -299,7 +299,131 @@ export async function getBookings(): Promise<Booking[]> {
     if (isProduction()) {
       console.error('Failed to fetch bookings:', error);
     }
+    throw error;
+  }
+}
+
+// Get bookings for a specific property
+export async function getPropertyBookings(propertyId: string): Promise<Booking[]> {
+  try {
+    const allBookings = await getBookings();
+    return allBookings.filter(booking => 
+      booking.propertyId === propertyId && 
+      booking.status !== 'cancelled'
+    );
+  } catch (error) {
+    console.error('Failed to fetch property bookings:', error);
     return [];
+  }
+}
+
+// Check if dates overlap
+export function doDatesOverlap(
+  start1: string, 
+  end1: string, 
+  start2: string, 
+  end2: string
+): boolean {
+  const s1 = new Date(start1);
+  const e1 = new Date(end1);
+  const s2 = new Date(start2);
+  const e2 = new Date(end2);
+  
+  return s1 < e2 && e1 > s2;
+}
+
+// Check property availability in Skyway Suites database
+export async function checkPropertyAvailability(
+  propertyId: string,
+  checkIn: string,
+  checkOut: string
+): Promise<{ available: boolean; conflictingBooking?: Booking }> {
+  try {
+    const bookings = await getPropertyBookings(propertyId);
+    
+    for (const booking of bookings) {
+      if (doDatesOverlap(checkIn, checkOut, booking.checkIn, booking.checkOut)) {
+        return { available: false, conflictingBooking: booking };
+      }
+    }
+    
+    return { available: true };
+  } catch (error) {
+    console.error('Failed to check availability:', error);
+    return { available: true }; // Fail open to allow bookings if check fails
+  }
+}
+
+// Parse iCal format to extract booking dates
+export function parseICalDates(icalData: string): Array<{ start: string; end: string }> {
+  const events: Array<{ start: string; end: string }> = [];
+  const lines = icalData.split('\n');
+  
+  let currentEvent: { start?: string; end?: string } = {};
+  let inEvent = false;
+  
+  for (const line of lines) {
+    const trimmed = line.trim();
+    
+    if (trimmed === 'BEGIN:VEVENT') {
+      inEvent = true;
+      currentEvent = {};
+    } else if (trimmed === 'END:VEVENT') {
+      if (currentEvent.start && currentEvent.end) {
+        events.push({ start: currentEvent.start, end: currentEvent.end });
+      }
+      inEvent = false;
+      currentEvent = {};
+    } else if (inEvent) {
+      if (trimmed.startsWith('DTSTART')) {
+        const dateMatch = trimmed.match(/DTSTART[;:](.+)/);
+        if (dateMatch) {
+          const dateStr = dateMatch[1].split('T')[0];
+          currentEvent.start = `${dateStr.substring(0, 4)}-${dateStr.substring(4, 6)}-${dateStr.substring(6, 8)}`;
+        }
+      } else if (trimmed.startsWith('DTEND')) {
+        const dateMatch = trimmed.match(/DTEND[;:](.+)/);
+        if (dateMatch) {
+          const dateStr = dateMatch[1].split('T')[0];
+          currentEvent.end = `${dateStr.substring(0, 4)}-${dateStr.substring(4, 6)}-${dateStr.substring(6, 8)}`;
+        }
+      }
+    }
+  }
+  
+  return events;
+}
+
+// Check Airbnb calendar availability
+export async function checkAirbnbAvailability(
+  property: Property,
+  checkIn: string,
+  checkOut: string
+): Promise<{ available: boolean; conflictDate?: string }> {
+  if (!property.calendarSyncEnabled || !property.airbnbCalendarUrl) {
+    return { available: true };
+  }
+  
+  try {
+    const response = await fetch(property.airbnbCalendarUrl);
+    if (!response.ok) {
+      console.error('Failed to fetch Airbnb calendar');
+      return { available: true }; // Fail open
+    }
+    
+    const icalData = await response.text();
+    const airbnbBookings = parseICalDates(icalData);
+    
+    for (const booking of airbnbBookings) {
+      if (doDatesOverlap(checkIn, checkOut, booking.start, booking.end)) {
+        return { available: false, conflictDate: booking.end };
+      }
+    }
+    
+    return { available: true };
+  } catch (error) {
+    console.error('Failed to check Airbnb availability:', error);
+    return { available: true }; // Fail open
   }
 }
 
