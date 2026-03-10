@@ -26,9 +26,10 @@ export function DatabaseStatus() {
   const checkConnection = async () => {
     try {
       console.log('🔍 Checking database connection...');
-      const response = await fetch('/api/health', {
+      const response = await fetch('/api?endpoint=health', {
         method: 'GET',
-        headers: { 'Accept': 'application/json' }
+        headers: { 'Accept': 'application/json' },
+        cache: 'no-cache'
       });
       
       // Get response as text first
@@ -42,16 +43,17 @@ export function DatabaseStatus() {
         console.log('📊 Health check data:', data);
       } catch (parseError) {
         // If it's HTML (like a 404 page), API route not found
-        console.warn('Health check: API route not available (may be in preview mode)');
+        console.warn('Health check: API route not available (in development/preview mode)');
         setIsConnected(true); // Assume connected in preview
         return;
       }
       
-      const connected = data.status === 'ok' && data.database === 'connected';
+      // Check if response indicates API is working
+      const connected = data.status === 'ok';
       setIsConnected(connected);
       
       if (!connected) {
-        setErrorDetails(data.error || 'Unknown error');
+        setErrorDetails(data.error || 'Neon database offline');
         console.error('❌ Database disconnected:', data.error);
       } else {
         setErrorDetails('');
@@ -60,7 +62,7 @@ export function DatabaseStatus() {
     } catch (error) {
       console.error('❌ Database health check failed:', error);
       setIsConnected(false);
-      setErrorDetails(error instanceof Error ? error.message : String(error));
+      setErrorDetails('Neon database is currently offline');
     }
   };
 

@@ -3,18 +3,47 @@ import { Building2, Home, Calendar, Users, CreditCard, Settings, LogOut, Menu, X
 import { useAuth } from '../../context/AuthContext';
 import { useEffect, useState } from 'react';
 import { RealtimeIndicator } from '../RealtimeIndicator';
+import { OfflineBanner } from '../OfflineBanner';
 
 export function AdminLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout, isAdmin } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isDatabaseOffline, setIsDatabaseOffline] = useState(false);
 
   useEffect(() => {
     if (!user || !isAdmin) {
       navigate('/login');
     }
   }, [user, isAdmin, navigate]);
+
+  // Check database connection status
+  useEffect(() => {
+    const checkDatabaseStatus = async () => {
+      try {
+        const response = await fetch('/api?endpoint=health', {
+          cache: 'no-cache'
+        });
+        
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('text/html')) {
+          // API not available - in development mode
+          setIsDatabaseOffline(false);
+          return;
+        }
+        
+        const data = await response.json();
+        setIsDatabaseOffline(data.status !== 'ok');
+      } catch (error) {
+        setIsDatabaseOffline(true);
+      }
+    };
+
+    checkDatabaseStatus();
+    const interval = setInterval(checkDatabaseStatus, 30000); // Check every 30s
+    return () => clearInterval(interval);
+  }, []);
 
   const isActive = (path: string) => {
     if (path === '/admin' || path === '/admin/properties') {
@@ -141,6 +170,13 @@ export function AdminLayout() {
             </div>
           </div>
         </div>
+        
+        {/* Offline Banner - Show at top when database is offline */}
+        {isDatabaseOffline && (
+          <div className="sticky top-0 md:top-0 z-20">
+            <OfflineBanner />
+          </div>
+        )}
         
         <Outlet />
         
