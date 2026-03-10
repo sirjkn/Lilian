@@ -66,7 +66,17 @@ export function AdminProperties() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validation: Ensure at least one image is uploaded
+    if (uploadedImages.length === 0) {
+      toast.error('Please upload at least one property image');
+      return;
+    }
+    
     try {
+      // Use the first uploaded image as the main property image
+      const mainImage = uploadedImages[0];
+      
       console.log('🔍 SUBMITTING PROPERTY:', {
         title: formData.title,
         description: formData.description,
@@ -76,7 +86,7 @@ export function AdminProperties() {
         bathrooms: Number(formData.bathrooms),
         guests: Number(formData.guests),
         category: formData.category,
-        image: formData.image || 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800',
+        image: mainImage,
         amenities: formData.amenities.split(',').map(a => a.trim()),
         available: true,
         icalUrl: '',
@@ -93,7 +103,7 @@ export function AdminProperties() {
         bathrooms: Number(formData.bathrooms),
         guests: Number(formData.guests),
         category: formData.category,
-        image: formData.image || 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800',
+        image: mainImage,
         amenities: formData.amenities.split(',').map(a => a.trim()),
         available: true,
         icalUrl: '',
@@ -157,6 +167,9 @@ export function AdminProperties() {
     e.preventDefault();
     if (editingProperty) {
       try {
+        // Use the first uploaded image if new images were uploaded, otherwise keep existing
+        const mainImage = uploadedImages.length > 0 ? uploadedImages[0] : formData.image;
+        
         await updateProperty(editingProperty.id, {
           title: formData.title,
           description: formData.description,
@@ -166,7 +179,7 @@ export function AdminProperties() {
           bathrooms: Number(formData.bathrooms),
           guests: Number(formData.guests),
           category: formData.category,
-          image: formData.image || 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800',
+          image: mainImage,
           amenities: formData.amenities.split(',').map(a => a.trim()),
           available: true,
         });
@@ -484,18 +497,10 @@ export function AdminProperties() {
                   <option value="3 Bedroom">3 Bedroom</option>
                 </select>
               </div>
-              <div>
-                <label className="block text-sm mb-2">Image URL</label>
-                <Input
-                  value={formData.image}
-                  onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                  placeholder="https://..."
-                />
-              </div>
               
               {/* Multiple Image Upload */}
               <div className="border-t pt-4">
-                <label className="block text-sm mb-2 font-medium">Upload Property Images</label>
+                <label className="block text-sm mb-2 font-medium">Upload Property Images *</label>
                 <p className="text-xs text-gray-600 mb-3">
                   Upload multiple images. Each will be automatically compressed to WebP format (max 50KB).
                 </p>
@@ -655,14 +660,6 @@ export function AdminProperties() {
                   <option value="2 Bedroom">2 Bedroom</option>
                   <option value="3 Bedroom">3 Bedroom</option>
                 </select>
-              </div>
-              <div>
-                <label className="block text-sm mb-2">Image URL</label>
-                <Input
-                  value={formData.image}
-                  onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                  placeholder="https://..."
-                />
               </div>
               
               {/* Multiple Image Upload for Edit */}
