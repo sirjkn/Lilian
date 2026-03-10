@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate, useSearchParams } from 'react-router';
 import { MapPin, Users, Bed, Bath, Wifi, Check, Tag } from 'lucide-react';
-import { getProperty, Property, extractPropertyId } from '../lib/api';
+import { getProperty, Property } from '../lib/api';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
@@ -9,7 +9,7 @@ import { useAuth } from '../context/AuthContext';
 import { toast } from 'sonner';
 
 export function PropertyDetails() {
-  const { id: slug } = useParams<{ id: string }>();
+  const { id } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [property, setProperty] = useState<Property | null>(null);
@@ -24,13 +24,9 @@ export function PropertyDetails() {
   const { user } = useAuth();
 
   useEffect(() => {
-    const loadProperty = async () => {
-      console.log('==================== PROPERTY DETAILS LOADING ====================');
-      console.log('1️⃣ Slug from useParams:', slug);
-      
-      if (!slug) {
-        console.log('❌ No slug provided');
-        setError('No property ID provided');
+    async function fetchProperty() {
+      if (!id) {
+        setError('Property ID is missing');
         setLoading(false);
         return;
       }
@@ -39,40 +35,26 @@ export function PropertyDetails() {
         setLoading(true);
         setError(null);
         
-        // Extract the actual property ID from the slug
-        const propertyId = extractPropertyId(slug);
-        console.log('2️⃣ Extracted property ID:', propertyId);
-        console.log('3️⃣ Calling getProperty with ID:', propertyId);
-        
-        const data = await getProperty(propertyId);
-        console.log('4️⃣ Property data received:', data);
-        console.log('   - Type of data:', typeof data);
-        console.log('   - Is null?', data === null);
-        console.log('   - Is undefined?', data === undefined);
+        console.log('🔍 PropertyDetails - Fetching property with ID:', id);
+        const data = await getProperty(id);
+        console.log('✅ Property data received:', data);
         
         if (!data) {
-          console.error('❌ No data returned from API');
+          console.log('❌ No data returned from API');
           setError('Property not found');
-          setLoading(false);
-          return;
+        } else {
+          setProperty(data);
         }
-        
-        console.log('✅ SUCCESS! Setting property state with:', data);
-        setProperty(data);
-        setLoading(false);
       } catch (err) {
-        console.error('❌ PropertyDetails - Error loading property:', err);
-        console.error('   - Error type:', typeof err);
-        console.error('   - Error message:', err instanceof Error ? err.message : String(err));
+        console.error('Failed to fetch property:', err);
         setError(err instanceof Error ? err.message : 'Failed to load property');
+      } finally {
         setLoading(false);
       }
-      
-      console.log('==================== PROPERTY DETAILS LOADING END ====================');
-    };
+    }
 
-    loadProperty();
-  }, [slug]);
+    fetchProperty();
+  }, [id]);
 
   const handleBooking = () => {
     if (!user) {
