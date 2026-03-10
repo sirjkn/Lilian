@@ -20,11 +20,10 @@ export function Login() {
       toast.success('Login successful!');
       navigate('/');
     } catch (error) {
-      // Only show error if it's not a development mode fallback
-      if (error instanceof Error && error.message !== 'API_NOT_AVAILABLE') {
-        const errorMessage = error.message || 'Login failed. Please check your credentials.';
-        toast.error(errorMessage);
-      }
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'Login failed. Please check your credentials.';
+      toast.error(errorMessage);
       console.error('Login error:', error);
     }
   };
@@ -75,13 +74,6 @@ export function Login() {
                 Create Account
               </Link>
             </p>
-          </div>
-
-          <div className="mt-4 p-3 bg-[#F5F3F0] rounded-md text-sm text-gray-600">
-            <p className="mb-1"><strong>Quick Login:</strong></p>
-            <p>✅ Use any email and password to login</p>
-            <p>✅ Use email containing "admin" for admin access (e.g., admin@example.com)</p>
-            <p className="mt-2 text-xs">Note: This works in preview mode. In production, connect to Neon database for real authentication.</p>
           </div>
         </CardContent>
       </Card>

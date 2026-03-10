@@ -1,281 +1,271 @@
-# 🚀 Quick Start Guide - Skyway Suites with Neon Database
+# 🚀 Skyway Suites - Quick Start Guide
 
-## ✅ What's Been Done
+## ⚡ 5-Minute Setup
 
-1. ✅ Backend API created with your Neon database connection string hardcoded
-2. ✅ Frontend updated to connect to the backend API
-3. ✅ "Back to HOME" link added to admin dashboard
-4. ✅ Color scheme updated to Olive Green, Dark Beige, and Charcoal Grey
+Your Skyway Suites app is configured for **real-time database connectivity**. Follow these steps to get it running:
 
-## 📋 Setup Instructions
+---
 
-### Step 1: Set Up Database Tables
+## Step 1: Create Neon Database (2 minutes)
 
-1. Go to your Neon console: https://console.neon.tech/
-2. Navigate to your project: `ep-floral-leaf-ag3dpaau`
-3. Click on **SQL Editor**
-4. Open the file `/backend-api/setup-database.sql`
-5. Copy ALL the SQL code
-6. Paste it into the Neon SQL Editor
-7. Click **Run** (this will create all tables and add sample data)
-
-### Step 2: Install Backend Dependencies
-
-Open a terminal and run:
-
-```bash
-cd backend-api
-npm install
-```
-
-This will install:
-- express (web server)
-- pg (PostgreSQL client)
-- bcrypt (password hashing)
-- jsonwebtoken (authentication)
-- cors (cross-origin requests)
-
-### Step 3: Start the Backend Server
-
-```bash
-npm start
-```
-
-You should see:
-```
-✅ Successfully connected to Neon database!
-🚀 Skyway Suites API server running on http://localhost:3001
-```
-
-**Keep this terminal running!**
-
-### Step 4: Start the Frontend
-
-Open a **NEW terminal** (keep the backend running in the first one):
-
-```bash
-# Make sure you're in the root directory (not backend-api)
-npm run dev
-```
-
-The frontend will run on `http://localhost:5173` (or similar)
-
-### Step 5: Test Everything!
-
-1. Open your browser to the frontend URL
-2. The app will automatically connect to your backend
-3. Try logging in with the default admin account:
-   - Email: `admin@skywaysuites.com`
-   - Password: `admin123`
-
-## 🎯 Features Now Connected to Neon Database
-
-✅ **Authentication**
-- Real user registration and login
-- Password hashing with bcrypt
-- JWT tokens for secure sessions
-
-✅ **Properties**
-- Create, read, update, delete properties
-- All stored in your Neon database
-
-✅ **Bookings**
-- Real booking system
-- Status tracking (pending, confirmed, etc.)
-
-✅ **Customers**
-- Customer management
-- Booking history tracking
-
-✅ **Payments**
-- Payment tracking
-- Revenue statistics
-
-## 🔑 Default Admin Account
-
-After running the SQL setup:
-- **Email**: admin@skywaysuites.com
-- **Password**: admin123
-
-## 🧪 Testing the Connection
-
-### Test 1: Backend API
-Open your browser or use curl:
-```bash
-curl http://localhost:3001/api/health
-```
-
-Expected response:
-```json
-{"status":"ok","message":"Skyway Suites API is running"}
-```
-
-### Test 2: Database Connection
-```bash
-curl http://localhost:3001/api/properties
-```
-
-You should see a JSON array of properties from your database.
-
-### Test 3: Frontend to Backend
-1. Open the frontend in your browser
-2. Open browser DevTools (F12)
-3. Go to Console tab
-4. You should see successful API calls (no CORS errors)
-
-## 🐛 Troubleshooting
-
-### Problem: "Cannot connect to database"
-
-**Solution**: Check that:
-1. Your Neon database is active (they auto-suspend after inactivity)
-2. The connection string in `/backend-api/server.js` is correct
-3. Your IP is allowed in Neon's settings
-
-### Problem: "CORS error" in browser
-
-**Solution**: Make sure the backend is running on port 3001. The frontend is already configured for CORS.
-
-### Problem: "Port 3001 already in use"
-
-**Solution**: 
-```bash
-# Kill the process on port 3001
-lsof -ti:3001 | xargs kill -9
-
-# Or change the port in backend-api/server.js:
-const PORT = 3002;  // Use a different port
-```
-
-### Problem: Backend not connecting to database
-
-**Check the connection string format**:
-```
-postgresql://username:password@host/database?sslmode=require
-```
-
-## 📦 What's Included in Sample Data
-
-After running the SQL setup, you'll have:
-
-- **5 Properties**: Various types (apartment, beach house, cabin, etc.)
-- **3 Customers**: Sample customer accounts
-- **2 Bookings**: Example bookings with different statuses
-- **2 Payments**: Sample payments (one paid, one pending)
-- **1 Admin User**: For testing the admin dashboard
-
-## 🌐 Deployment
-
-### Deploy Backend (Choose One)
-
-#### Option 1: Railway (Recommended - Easiest)
-1. Push your code to GitHub
-2. Go to https://railway.app
-3. Click "New Project" → "Deploy from GitHub"
-4. Select your repo
-5. Railway will auto-detect and deploy
-6. Copy the deployed URL
-
-#### Option 2: Render
-1. Go to https://render.com
-2. Click "New" → "Web Service"
-3. Connect GitHub repo
-4. Root directory: `backend-api`
-5. Build command: `npm install`
-6. Start command: `npm start`
-
-#### Option 3: Fly.io
-```bash
-cd backend-api
-fly launch
-fly deploy
-```
-
-### Deploy Frontend
-
-#### Vercel (Recommended)
-1. Push your code to GitHub
-2. Go to https://vercel.com
-3. Import your GitHub repo
-4. Add environment variable:
-   - Key: `VITE_API_URL`
-   - Value: `https://your-backend-url.com/api`
-5. Deploy!
-
-## 🔒 Security for Production
-
-Before deploying to production:
-
-1. **Move database URL to environment variable**:
-   ```javascript
-   connectionString: process.env.DATABASE_URL
+1. Go to [neon.tech](https://neon.tech)
+2. Click **"Sign Up"** or **"Login"**
+3. Create new project: **"Skyway Suites"**
+4. Copy your connection string (looks like this):
+   ```
+   postgresql://user:password@host.neon.tech/database
    ```
 
-2. **Change JWT secret**:
-   ```javascript
-   const JWT_SECRET = process.env.JWT_SECRET;
+---
+
+## Step 2: Create Database Tables (1 minute)
+
+1. In Neon dashboard, click **"SQL Editor"**
+2. Paste this SQL and click **"Run"**:
+
+```sql
+-- Users table
+CREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  email VARCHAR(255) UNIQUE NOT NULL,
+  password_hash VARCHAR(255) NOT NULL,
+  name VARCHAR(255) NOT NULL,
+  role VARCHAR(50) DEFAULT 'customer',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Properties table
+CREATE TABLE properties (
+  id SERIAL PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  description TEXT,
+  price DECIMAL(10, 2) NOT NULL,
+  location VARCHAR(255),
+  bedrooms INTEGER,
+  bathrooms INTEGER,
+  guests INTEGER,
+  image TEXT,
+  images TEXT[],
+  amenities TEXT[],
+  available BOOLEAN DEFAULT true,
+  ical_url TEXT,
+  airbnb_calendar_url TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Bookings table
+CREATE TABLE bookings (
+  id SERIAL PRIMARY KEY,
+  property_id INTEGER REFERENCES properties(id),
+  customer_id INTEGER REFERENCES users(id),
+  check_in DATE NOT NULL,
+  check_out DATE NOT NULL,
+  guests INTEGER,
+  total_price DECIMAL(10, 2),
+  amount_paid DECIMAL(10, 2),
+  status VARCHAR(50) DEFAULT 'pending',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Payments table
+CREATE TABLE payments (
+  id SERIAL PRIMARY KEY,
+  booking_id INTEGER REFERENCES bookings(id),
+  customer_id INTEGER REFERENCES users(id),
+  amount DECIMAL(10, 2) NOT NULL,
+  status VARCHAR(50) DEFAULT 'pending',
+  payment_method VARCHAR(100),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Settings table
+CREATE TABLE settings (
+  id SERIAL PRIMARY KEY,
+  category VARCHAR(100) NOT NULL,
+  key VARCHAR(100) NOT NULL,
+  value TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(category, key)
+);
+```
+
+---
+
+## Step 3: Create Admin User (1 minute)
+
+### Option A: Use Signup Page (Easiest)
+1. Skip this step for now
+2. After deployment, go to `/create-account`
+3. Create account
+4. Manually update role to 'admin' in database:
+   ```sql
+   UPDATE users SET role = 'admin' WHERE email = 'your@email.com';
    ```
 
-3. **Add .env file** (don't commit this!):
+### Option B: Use SQL (Requires bcrypt hash)
+You'll need to generate a password hash first. For now, use Option A.
+
+---
+
+## Step 4: Deploy to Vercel (1 minute)
+
+1. Push your code to GitHub:
+   ```bash
+   git add .
+   git commit -m "Initial commit"
+   git push origin main
    ```
+
+2. Go to [vercel.com](https://vercel.com)
+3. Click **"Import Project"**
+4. Select your GitHub repository
+5. Click **"Deploy"**
+
+---
+
+## Step 5: Set Environment Variables (30 seconds)
+
+In Vercel dashboard:
+
+1. Go to **Settings** → **Environment Variables**
+2. Add these variables:
+
+   **Name:** `DATABASE_URL`  
+   **Value:** Your Neon connection string  
+   (Example: `postgresql://user:pass@host.neon.tech/db`)
+
+   **Name:** `JWT_SECRET`  
+   **Value:** Any random string  
+   (Example: `my-super-secret-key-change-this-in-production`)
+
+3. Click **"Save"**
+4. Redeploy: **Deployments** → **⋮** → **Redeploy**
+
+---
+
+## ✅ You're Done!
+
+Visit your Vercel URL:
+```
+https://your-app.vercel.app
+```
+
+### First Login
+
+1. Go to `/create-account`
+2. Create your account
+3. Open Neon SQL editor
+4. Make yourself admin:
+   ```sql
+   UPDATE users SET role = 'admin' 
+   WHERE email = 'your@email.com';
+   ```
+5. Refresh the page
+6. Access admin panel via menu
+7. Create properties!
+
+---
+
+## 🎯 Common Issues
+
+### Issue: "Login failed"
+**Solution:** Make sure you created an account first via signup page
+
+### Issue: "Request failed"
+**Solution:** 
+- Check DATABASE_URL is set in Vercel
+- Check DATABASE_URL is correct (test in Neon dashboard)
+- Redeploy after setting env variables
+
+### Issue: "Can't access admin panel"
+**Solution:** Make sure your user role is 'admin' in database
+
+### Issue: Empty properties page
+**Solution:** You haven't created any properties yet. Use admin panel to create them.
+
+---
+
+## 📱 Local Development (Optional)
+
+If you want to run locally:
+
+1. Install backend dependencies:
+   ```bash
+   cd backend-api
+   npm install
+   ```
+
+2. Create `.env` file in `backend-api` folder:
+   ```env
    DATABASE_URL=your_neon_connection_string
-   JWT_SECRET=your-super-secret-random-string
-   PORT=3001
+   JWT_SECRET=any-secret-key
+   PORT=3000
    ```
 
-4. **Update CORS** for production:
-   ```javascript
-   app.use(cors({
-     origin: 'https://your-frontend-domain.com'
-   }));
+3. Start backend:
+   ```bash
+   npm start
    ```
 
-## 🎨 Color Scheme
+4. In another terminal, start frontend:
+   ```bash
+   npm run dev
+   ```
 
-The entire application now uses:
-- **Primary (Olive Green)**: #6B7C3C
-- **Secondary (Dark Beige)**: #C9B99B
-- **Charcoal Grey**: #3a3a3a
-- **Light Beige**: #E8E3DB
+5. Open `http://localhost:5173`
 
-## 📚 API Endpoints Reference
+---
 
-All endpoints are prefixed with `/api`
+## 🎓 Next Steps
 
-### Authentication
-- `POST /auth/signup` - Register new user
-- `POST /auth/login` - Login
+After setup:
 
-### Properties
-- `GET /properties` - Get all properties
-- `GET /properties/:id` - Get single property
-- `POST /properties` - Create property
-- `PUT /properties/:id` - Update property
-- `DELETE /properties/:id` - Delete property
+1. ✅ Login with your account
+2. ✅ Make yourself admin (SQL update)
+3. ✅ Access admin panel
+4. ✅ Create your first property
+5. ✅ View property on homepage
+6. ✅ Create a booking
+7. ✅ Test the entire flow!
 
-### Bookings
-- `GET /bookings` - Get all bookings
-- `POST /bookings` - Create booking
-- `PUT /bookings/:id` - Update booking
+---
 
-### Customers
-- `GET /customers` - Get all customers
-- `POST /customers` - Create customer
+## 📚 Full Documentation
 
-### Payments
-- `GET /payments` - Get all payments
-- `POST /payments` - Create payment
+- **Setup Guide:** `/REAL_TIME_API_SETUP.md`
+- **Changes Summary:** `/CHANGES_SUMMARY.md`
+- **Database Schema:** See Step 2 above
 
-### Contact
-- `POST /contact` - Submit contact form
+---
 
-## 🎉 You're All Set!
+## 🆘 Need Help?
 
-Your Skyway Suites application is now fully connected to your Neon database with:
-- ✅ Real authentication
-- ✅ Database persistence
-- ✅ Admin dashboard with "Back to HOME" link
-- ✅ Beautiful olive green, beige, and charcoal grey color scheme
-- ✅ Full CRUD operations for properties, bookings, customers, and payments
+Check the full setup guide in `/REAL_TIME_API_SETUP.md` for:
+- Detailed API documentation
+- Troubleshooting steps
+- Database monitoring queries
+- Testing commands
+- Architecture overview
 
-Enjoy your fully functional property booking platform! 🏠
+---
+
+## ✨ Features
+
+Once set up, you'll have:
+
+- ✅ Real-time property management
+- ✅ Booking system with conflict detection
+- ✅ Payment tracking
+- ✅ Customer management
+- ✅ Admin dashboard
+- ✅ User authentication
+- ✅ Secure API with JWT tokens
+- ✅ All data persisted in Neon database
+
+**Everything runs in real-time with your Neon database!** 🚀
+
+---
+
+**Total Setup Time:** ~5 minutes  
+**Difficulty:** Easy  
+**Requirements:** Neon account + Vercel account (both free)
