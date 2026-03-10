@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { Plus, Calendar, Users, Pencil, Trash2, Copy, Link as LinkIcon, Save, Upload, X } from 'lucide-react';
-import { getProperties, Property, createProperty, deleteProperty, updateProperty, getBookings, Booking, getPayments, Payment, generateICalUrl } from '../../lib/api';
+import { getProperties, Property, createProperty, deleteProperty, updateProperty, getBookings, Booking, getPayments, Payment, generateICalUrl, checkAirbnbAvailability } from '../../lib/api';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
 import { toast } from 'sonner';
 import * as Dialog from '@radix-ui/react-dialog';
 import { compressMultipleImages, CompressedImage } from '../../lib/imageUtils';
+import { PropertyCalendar } from '../../components/PropertyCalendar';
 
 export function AdminProperties() {
   const [properties, setProperties] = useState<Property[]>([]);
@@ -19,6 +20,7 @@ export function AdminProperties() {
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);
   const [calendarProperty, setCalendarProperty] = useState<Property | null>(null);
   const [airbnbCalendarUrl, setAirbnbCalendarUrl] = useState('');
+  const [airbnbBookings, setAirbnbBookings] = useState<Array<{ checkIn: string; checkOut: string }>>([]);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [isCompressing, setIsCompressing] = useState(false);
   const [formData, setFormData] = useState({
@@ -184,8 +186,44 @@ export function AdminProperties() {
       setCalendarProperty(property);
       setAirbnbCalendarUrl(property.airbnbCalendarUrl || '');
       setShowCalendarDialog(true);
+      
+      // Load Airbnb bookings if URL exists
+      if (property.airbnbCalendarUrl) {
+        loadAirbnbBookings(property.airbnbCalendarUrl);
+      }
     }
   };
+  
+  const loadAirbnbBookings = async (icalUrl: string) => {
+    if (!icalUrl) return;
+    
+    try {
+      const result = await checkAirbnbAvailability(icalUrl, '', '');
+      if (result && result.airbnbBookings) {
+        setAirbnbBookings(result.airbnbBookings);
+      }
+    } catch (error) {
+      console.error('Failed to load Airbnb bookings:', error);
+    }
+  };
+  
+  // Auto-sync Airbnb calendar every 1 second when calendar dialog is open
+  useEffect(() => {
+    if (!showCalendarDialog || !calendarProperty || !calendarProperty.airbnbCalendarUrl) {
+      return;
+    }
+    
+    // Initial load
+    loadAirbnbBookings(calendarProperty.airbnbCalendarUrl);
+    
+    // Set up interval for every 1 second
+    const interval = setInterval(() => {
+      loadAirbnbBookings(calendarProperty.airbnbCalendarUrl!);
+    }, 1000);
+    
+    // Cleanup interval on unmount or when dialog closes
+    return () => clearInterval(interval);
+  }, [showCalendarDialog, calendarProperty]);
 
   const handleSaveCalendar = async () => {
     if (calendarProperty) {
@@ -797,6 +835,28 @@ export function AdminProperties() {
                   </div>
                 </div>
               </div>
+              
+              {/* Property Calendar View */}
+              {calendarProperty && (
+                <div>
+                  <PropertyCalendar
+                    propertyId={calendarProperty.id}
+                    skywayBookings={
+                      bookings
+                        .filter(b => b.propertyId === calendarProperty.id)
+                        .filter(b => {
+                          const payment = payments.find(p => p.bookingId === b.id);
+                          return payment && payment.status === 'paid' && payment.amount >= b.totalPrice;
+                        })
+                        .map(b => ({
+                          checkIn: b.checkIn,
+                          checkOut: b.checkOut,
+                        }))
+                    }
+                    airbnbBookings={airbnbBookings}
+                  />
+                </div>
+              )}
             </div>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4 sm:pt-6">
               <Button type="button" onClick={handleSaveCalendar} className="w-full sm:w-auto">
