@@ -195,8 +195,16 @@ export async function getProperties(): Promise<Property[]> {
 
 export async function getPropertyById(id: string): Promise<Property | null> {
   try {
-    return await fetchWithAuth(`${API_BASE_URL}?endpoint=properties&id=${id}`);
+    console.log('🔍 API - getPropertyById called with ID:', id);
+    console.log('🔍 API - Request URL:', `${API_BASE_URL}?endpoint=properties&id=${id}`);
+    
+    const result = await fetchWithAuth(`${API_BASE_URL}?endpoint=properties&id=${id}`);
+    console.log('✅ API - getPropertyById result:', result);
+    
+    return result;
   } catch (error) {
+    console.error('❌ API - getPropertyById error:', error);
+    
     // Silently return null in preview mode or if API not deployed
     if (error instanceof Error && (error.message === 'PREVIEW_MODE' || error.message === 'API_NOT_DEPLOYED')) {
       return null;

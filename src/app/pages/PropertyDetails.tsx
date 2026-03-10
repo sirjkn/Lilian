@@ -11,23 +11,49 @@ import { toast } from 'sonner';
 export function PropertyDetails() {
   const { id: slug } = useParams<{ id: string }>();
   const [property, setProperty] = useState<Property | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [checkIn, setCheckIn] = useState('');
   const [checkOut, setCheckOut] = useState('');
   const [guests, setGuests] = useState('1');
   const { user } = useAuth();
 
   useEffect(() => {
-    if (slug) {
-      // Extract the actual property ID from the slug
-      const propertyId = extractPropertyId(slug);
-      console.log('🔍 Loading property with ID:', propertyId, 'from slug:', slug);
-      getProperty(propertyId).then((data) => {
-        console.log('✅ Property loaded:', data);
+    const loadProperty = async () => {
+      if (!slug) {
+        setError('No property ID provided');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Extract the actual property ID from the slug
+        const propertyId = extractPropertyId(slug);
+        console.log('🔍 PropertyDetails - Slug:', slug);
+        console.log('🔍 PropertyDetails - Extracted ID:', propertyId);
+        
+        const data = await getProperty(propertyId);
+        console.log('✅ PropertyDetails - Data received:', data);
+        
+        if (!data) {
+          setError('Property not found');
+          setLoading(false);
+          return;
+        }
+        
         setProperty(data);
-      }).catch((error) => {
-        console.error('❌ Failed to load property:', error);
-      });
-    }
+      } catch (err) {
+        console.error('❌ PropertyDetails - Error loading property:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load property');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProperty();
   }, [slug]);
 
   const handleBooking = () => {
@@ -43,11 +69,31 @@ export function PropertyDetails() {
     toast.success('Booking request submitted! (Connect to Neon database to save)');
   };
 
-  if (!property) {
+  if (loading) {
     return (
       <div className="py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <p>Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <p className="text-red-500">Error: {error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!property) {
+    return (
+      <div className="py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <p>Property not found</p>
         </div>
       </div>
     );
