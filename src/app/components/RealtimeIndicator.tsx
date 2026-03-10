@@ -1,14 +1,30 @@
 import { useEffect, useState } from 'react';
-import { Database, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
+import { Database, AlertCircle, CheckCircle2, Loader2, Wrench } from 'lucide-react';
 import { Badge } from './ui/badge';
+
+// Detect if we're in preview mode
+function isPreviewMode(): boolean {
+  const hostname = window.location.hostname;
+  return hostname.includes('makeproxy') || 
+         hostname.includes('localhost') || 
+         hostname === '127.0.0.1';
+}
 
 export function RealtimeIndicator() {
   const [isConnected, setIsConnected] = useState<boolean | null>(null); // null = checking
   const [lastSync, setLastSync] = useState<Date>(new Date());
   const [errorMessage, setErrorMessage] = useState<string>('');
+  const inPreview = isPreviewMode();
 
   // Check API connectivity
   useEffect(() => {
+    // In preview mode, show preview status immediately
+    if (inPreview) {
+      setIsConnected(null); // null will show special preview state
+      setErrorMessage('Preview Mode - Deploy to Vercel');
+      return;
+    }
+
     let isMounted = true;
 
     const checkConnection = async () => {
@@ -28,20 +44,10 @@ export function RealtimeIndicator() {
         
         if (!isMounted) return; // Check again after async operation
         
-        // Check if it's HTML (preview mode) or JSON (production)
-        const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes('text/html')) {
-          // In preview/development mode - API not available
-          setIsConnected(true);
-          setErrorMessage('Development Mode');
-          setLastSync(new Date());
-          return;
-        }
-        
         const data = await response.json();
-        const connected = data.status === 'ok';
+        const connected = data.status === 'ok' && data.database === 'connected';
         setIsConnected(connected);
-        setErrorMessage(connected ? '' : (data.error || 'Database offline'));
+        setErrorMessage(connected ? '' : (data.error || data.message || 'Database offline'));
         setLastSync(new Date());
         
         // Log detailed status for debugging
@@ -64,6 +70,7 @@ export function RealtimeIndicator() {
         if (error instanceof Error && error.name !== 'AbortError') {
           setIsConnected(false);
           setErrorMessage('Connection failed');
+          console.error('🔴 Connection check failed:', error);
         }
       }
     };
@@ -82,7 +89,7 @@ export function RealtimeIndicator() {
       isMounted = false;
       clearInterval(interval);
     };
-  }, []); // Empty dependency array - only run once on mount
+  }, [inPreview]);
 
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString('en-US', {
@@ -91,6 +98,29 @@ export function RealtimeIndicator() {
       second: '2-digit'
     });
   };
+
+  // In preview mode, show special preview badge
+  if (inPreview) {
+    return (
+      <div className="fixed bottom-6 right-6 z-50">
+        <Badge
+          variant="default"
+          className="flex items-center gap-2 px-4 py-2 shadow-xl border-2"
+          style={{
+            backgroundColor: '#f59e0b',
+            borderColor: '#fbbf24',
+            color: 'white'
+          }}
+        >
+          <Wrench className="w-4 h-4" />
+          <span className="text-xs font-medium">Preview Mode</span>
+        </Badge>
+        <div className="text-xs text-gray-600 mt-1 text-right bg-white/90 px-2 py-1 rounded shadow">
+          <span className="text-orange-700">Deploy to Vercel for live data</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed bottom-6 right-6 z-50">

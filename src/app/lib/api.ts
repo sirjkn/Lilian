@@ -2,6 +2,21 @@
 // Backend API URL - automatically uses Vercel's API routes in production
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
+// Detect if we're in preview mode (Figma Make) vs production (Vercel)
+function isPreviewMode(): boolean {
+  const hostname = window.location.hostname;
+  return hostname.includes('makeproxy') || 
+         hostname.includes('localhost') || 
+         hostname === '127.0.0.1';
+}
+
+// Detect if we're deployed to Vercel
+function isProduction(): boolean {
+  const hostname = window.location.hostname;
+  return hostname.includes('vercel.app') || 
+         (!hostname.includes('makeproxy') && !hostname.includes('localhost'));
+}
+
 export interface Property {
   id: string;
   title: string;
@@ -79,7 +94,15 @@ async function fetchWithAuth(url: string, options: RequestInit = {}) {
     ...options.headers,
   };
 
+  // In preview mode, don't even try to hit the API
+  if (isPreviewMode()) {
+    console.warn('⚠️ Preview Mode - API not available. Deploy to Vercel to use real database.');
+    throw new Error('PREVIEW_MODE');
+  }
+
   try {
+    console.log('🌐 API Request:', url, options.method || 'GET');
+    
     const response = await fetch(url, { 
       ...options, 
       headers,
@@ -89,40 +112,49 @@ async function fetchWithAuth(url: string, options: RequestInit = {}) {
     // Check if response is HTML (error page) - API not available
     const contentType = response.headers.get('content-type');
     if (contentType && contentType.includes('text/html')) {
-      // Silently return empty array or null - API is not available in dev mode
-      console.info('API not available - using empty data');
-      return null;
+      // API is not available (deployment issue)
+      console.error('❌ API endpoint returned HTML - not deployed correctly');
+      throw new Error('API_NOT_DEPLOYED');
     }
     
     if (!response.ok) {
       const error = await response.json().catch(() => ({ error: 'Request failed' }));
-      throw new Error(error.error || 'Request failed');
+      console.error('❌ API Error:', error);
+      throw new Error(error.error || `Request failed with status ${response.status}`);
     }
     
-    return response.json();
+    const data = await response.json();
+    console.log('✅ API Success:', url);
+    return data;
   } catch (error) {
-    // If it's a network error or API not available, return null silently
-    if (error instanceof TypeError && error.message.includes('fetch')) {
-      console.info('API not available - using empty data');
-      return null;
-    }
-    // Only throw if it's an actual error from the API (not a connection issue)
-    if (error instanceof Error && !error.message.includes('API not available')) {
+    // Re-throw our custom errors
+    if (error instanceof Error && (error.message === 'PREVIEW_MODE' || error.message === 'API_NOT_DEPLOYED')) {
       throw error;
     }
-    // For API not available, return null
-    return null;
+    // Log and throw other errors
+    console.error('❌ Fetch error:', error);
+    throw error;
   }
 }
 
 // Properties API
 export async function getProperties(): Promise<Property[]> {
-  const result = await fetchWithAuth(`${API_BASE_URL}?endpoint=properties`);
-  return result || [];
+  try {
+    const result = await fetchWithAuth(`${API_BASE_URL}?endpoint=properties`);
+    return result || [];
+  } catch (error) {
+    console.error('Failed to fetch properties:', error);
+    return [];
+  }
 }
 
 export async function getPropertyById(id: string): Promise<Property | null> {
-  return await fetchWithAuth(`${API_BASE_URL}?endpoint=properties&id=${id}`);
+  try {
+    return await fetchWithAuth(`${API_BASE_URL}?endpoint=properties&id=${id}`);
+  } catch (error) {
+    console.error('Failed to fetch property:', error);
+    return null;
+  }
 }
 
 // Alias for backward compatibility
@@ -150,8 +182,13 @@ export async function deleteProperty(id: string): Promise<void> {
 
 // Bookings API
 export async function getBookings(): Promise<Booking[]> {
-  const result = await fetchWithAuth(`${API_BASE_URL}?endpoint=bookings`);
-  return result || [];
+  try {
+    const result = await fetchWithAuth(`${API_BASE_URL}?endpoint=bookings`);
+    return result || [];
+  } catch (error) {
+    console.error('Failed to fetch bookings:', error);
+    return [];
+  }
 }
 
 export async function createBooking(booking: Omit<Booking, 'id' | 'createdAt'>): Promise<Booking> {
@@ -183,8 +220,13 @@ export async function deleteBooking(id: string): Promise<void> {
 
 // Customers API
 export async function getCustomers(): Promise<Customer[]> {
-  const result = await fetchWithAuth(`${API_BASE_URL}?endpoint=customers`);
-  return result || [];
+  try {
+    const result = await fetchWithAuth(`${API_BASE_URL}?endpoint=customers`);
+    return result || [];
+  } catch (error) {
+    console.error('Failed to fetch customers:', error);
+    return [];
+  }
 }
 
 export async function createCustomer(customer: Omit<Customer, 'id' | 'createdAt' | 'totalBookings'>): Promise<Customer> {
@@ -209,8 +251,13 @@ export async function deleteCustomer(id: string): Promise<void> {
 
 // Payments API
 export async function getPayments(): Promise<Payment[]> {
-  const result = await fetchWithAuth(`${API_BASE_URL}?endpoint=payments`);
-  return result || [];
+  try {
+    const result = await fetchWithAuth(`${API_BASE_URL}?endpoint=payments`);
+    return result || [];
+  } catch (error) {
+    console.error('Failed to fetch payments:', error);
+    return [];
+  }
 }
 
 export async function createPayment(payment: Omit<Payment, 'id' | 'createdAt'>): Promise<Payment> {
@@ -335,8 +382,13 @@ export function generateICalUrl(propertyId: string): string {
 
 // Users API
 export async function getUsers(): Promise<User[]> {
-  const result = await fetchWithAuth(`${API_BASE_URL}?endpoint=users`);
-  return result || [];
+  try {
+    const result = await fetchWithAuth(`${API_BASE_URL}?endpoint=users`);
+    return result || [];
+  } catch (error) {
+    console.error('Failed to fetch users:', error);
+    return [];
+  }
 }
 
 export async function createUser(user: { email: string; password: string; name: string; role: 'admin' | 'customer' }): Promise<User> {
