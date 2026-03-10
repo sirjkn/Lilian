@@ -251,15 +251,15 @@ export function PropertyDetails() {
           <span>{property.title}</span>
         </div>
 
-        {/* Image */}
-        <div
-          className="h-96 rounded-lg bg-cover bg-center mb-8"
-          style={{ backgroundImage: `url('${property.image}')` }}
-        />
-
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Property Details */}
           <div className="lg:col-span-2">
+            {/* Image - Same width as title */}
+            <div
+              className="h-96 rounded-lg bg-cover bg-center mb-8"
+              style={{ backgroundImage: `url('${property.image}')` }}
+            />
+            
             {/* Booking Status Banner */}
             {currentBooking && (
               <div className="mb-6 bg-red-50 border-l-4 border-red-600 p-4 rounded-md">
