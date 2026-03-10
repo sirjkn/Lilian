@@ -9,6 +9,7 @@ import { CreateAccount } from "./pages/CreateAccount";
 import { Login } from "./pages/Login";
 import { PropertyDetails } from "./pages/PropertyDetails";
 import { CustomerProfile } from "./pages/CustomerProfile";
+import { NotFound } from "./pages/NotFound";
 import { AdminLayout } from "./components/admin/AdminLayout";
 import { AdminProperties } from "./pages/admin/AdminProperties";
 import { AdminBookings } from "./pages/admin/AdminBookings";
@@ -59,6 +60,10 @@ export const router = createBrowserRouter([
           { path: "payments", Component: AdminPayments },
           { path: "settings", Component: AdminSettings },
         ],
+      },
+      {
+        path: "*",
+        Component: NotFound,
       },
     ],
   },
