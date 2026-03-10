@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router';
+import { Link, useNavigate, useSearchParams } from 'react-router';
 import { Building2, Info } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -14,6 +14,7 @@ export function CreateAccount() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const { signup, isPreviewMode } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,7 +27,15 @@ export function CreateAccount() {
     try {
       await signup(email, password, name);
       toast.success('Account created successfully!');
-      navigate('/');
+      
+      // Get return URL with booking state
+      const returnTo = searchParams.get('returnTo');
+      if (returnTo) {
+        // Decode and navigate to the return URL
+        navigate(decodeURIComponent(returnTo));
+      } else {
+        navigate('/');
+      }
     } catch (error) {
       const errorMessage = error instanceof Error 
         ? error.message 
@@ -113,7 +122,13 @@ export function CreateAccount() {
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
               Already have an account?{' '}
-              <Link to="/login" className="text-[#6B7C3C] hover:underline">
+              <Link 
+                to={searchParams.get('returnTo') 
+                  ? `/login?returnTo=${searchParams.get('returnTo')}` 
+                  : '/login'
+                } 
+                className="text-[#6B7C3C] hover:underline"
+              >
                 Login
               </Link>
             </p>

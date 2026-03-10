@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router';
+import { useParams, Link, useNavigate, useSearchParams } from 'react-router';
 import { MapPin, Users, Bed, Bath, Wifi, Check, Tag } from 'lucide-react';
 import { getProperty, Property, extractPropertyId } from '../lib/api';
 import { Button } from '../components/ui/button';
@@ -10,12 +10,17 @@ import { toast } from 'sonner';
 
 export function PropertyDetails() {
   const { id: slug } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [property, setProperty] = useState<Property | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [checkIn, setCheckIn] = useState('');
-  const [checkOut, setCheckOut] = useState('');
-  const [guests, setGuests] = useState('1');
+  
+  // Get booking state from URL params (if returning from login)
+  const [checkIn, setCheckIn] = useState(searchParams.get('checkIn') || '');
+  const [checkOut, setCheckOut] = useState(searchParams.get('checkOut') || '');
+  const [guests, setGuests] = useState(searchParams.get('guests') || '1');
+  
   const { user } = useAuth();
 
   useEffect(() => {
@@ -295,9 +300,26 @@ export function PropertyDetails() {
                       Request to Book
                     </Button>
                   ) : (
-                    <Link to="/login">
-                      <Button className="w-full">Login to Book</Button>
-                    </Link>
+                    <Button 
+                      className="w-full" 
+                      onClick={() => {
+                        // Build return URL with booking state
+                        const params = new URLSearchParams();
+                        if (checkIn) params.set('checkIn', checkIn);
+                        if (checkOut) params.set('checkOut', checkOut);
+                        if (guests) params.set('guests', guests);
+                        
+                        const currentPath = window.location.pathname;
+                        const returnUrl = params.toString() 
+                          ? `${currentPath}?${params.toString()}`
+                          : currentPath;
+                        
+                        // Navigate to login with return URL
+                        navigate(`/login?returnTo=${encodeURIComponent(returnUrl)}`);
+                      }}
+                    >
+                      Login to Book
+                    </Button>
                   )}
                   <p className="text-sm text-gray-600 text-center">
                     You won't be charged yet
