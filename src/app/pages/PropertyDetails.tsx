@@ -22,6 +22,8 @@ export function PropertyDetails() {
   const navigate = useNavigate();
   const [property, setProperty] = useState<Property | null>(null);
   const [currentBooking, setCurrentBooking] = useState<Booking | null>(null);
+  const [appConflict, setAppConflict] = useState<{ hasConflict: boolean; availableDate?: string }>({ hasConflict: false });
+  const [checkingApp, setCheckingApp] = useState(false);
   const [airbnbConflict, setAirbnbConflict] = useState<{ hasConflict: boolean; availableDate?: string }>({ hasConflict: false });
   const [checkingAirbnb, setCheckingAirbnb] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -78,6 +80,35 @@ export function PropertyDetails() {
 
     fetchProperty();
   }, [id]);
+
+  // Check App (Skyway Suites) availability when dates change
+  useEffect(() => {
+    async function checkApp() {
+      if (!id || !checkIn || !checkOut) {
+        setAppConflict({ hasConflict: false });
+        return;
+      }
+
+      const numberOfDays = Math.ceil((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / (1000 * 60 * 60 * 24));
+      if (numberOfDays <= 0) {
+        setAppConflict({ hasConflict: false });
+        return;
+      }
+
+      setCheckingApp(true);
+      const appCheck = await checkPropertyAvailability(id, checkIn, checkOut);
+      setCheckingApp(false);
+
+      if (!appCheck.available && appCheck.conflictingBooking) {
+        const availableDate = new Date(appCheck.conflictingBooking.checkOut).toLocaleDateString();
+        setAppConflict({ hasConflict: true, availableDate });
+      } else {
+        setAppConflict({ hasConflict: false });
+      }
+    }
+
+    checkApp();
+  }, [id, checkIn, checkOut]);
 
   // Check Airbnb availability when dates change
   useEffect(() => {
@@ -335,7 +366,31 @@ export function PropertyDetails() {
                     />
                   </div>
 
-                  {/* Airbnb Conflict Warning - Inline */}
+                  {/* App (Skyway Suites) Conflict Warning - Inline RED */}
+                  {checkingApp && (
+                    <div className="bg-red-50 border-l-4 border-red-600 p-3 rounded-md">
+                      <div className="flex items-center gap-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-red-600 border-t-transparent"></div>
+                        <p className="text-sm text-red-800">Checking availability...</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {appConflict.hasConflict && !checkingApp && (
+                    <div className="bg-red-50 border-l-4 border-red-600 p-3 rounded-md">
+                      <div className="flex items-start gap-2">
+                        <AlertCircle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+                        <div>
+                          <p className="font-semibold text-red-800 text-sm">Property Booked</p>
+                          <p className="text-xs text-red-700 mt-1">
+                            Choose from {appConflict.availableDate}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Airbnb Conflict Warning - Inline AMBER */}
                   {checkingAirbnb && (
                     <div className="bg-amber-50 border-l-4 border-amber-500 p-3 rounded-md">
                       <div className="flex items-center gap-2">
