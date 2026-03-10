@@ -1,8 +1,14 @@
 import { Pool, neonConfig } from '@neondatabase/serverless';
 import { ENV } from './env.js';
+import ws from 'ws';
 
-// Configure Neon for serverless (uses fetch instead of WebSockets)
+// Configure Neon for Vercel serverless environment
 neonConfig.fetchConnectionCache = true;
+
+// Use ws package for WebSocket connections in Node.js environment
+if (typeof WebSocket === 'undefined') {
+  neonConfig.webSocketConstructor = ws;
+}
 
 // Singleton connection pool
 let pool: Pool | null = null;
