@@ -12,6 +12,12 @@ import * as Dialog from '@radix-ui/react-dialog';
 export function AdminBookings() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [selectedBookingForPayment, setSelectedBookingForPayment] = useState<Booking | null>(null);
+  const [paymentFormData, setPaymentFormData] = useState({
+    amount: '',
+    paymentMethod: 'MPesa',
+  });
   const [properties, setProperties] = useState<any[]>([]);
   const [customers, setCustomers] = useState<any[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -105,30 +111,52 @@ export function AdminBookings() {
   };
 
   const handleMakePayment = async (booking: Booking) => {
-    try {
-      // Check if payment already exists
-      const existingPayment = payments.find(p => p.bookingId === booking.id);
-      
-      if (existingPayment && existingPayment.status === 'paid') {
-        toast.error('Payment already completed for this booking');
-        return;
-      }
+    // Check if payment already exists
+    const existingPayment = payments.find(p => p.bookingId === booking.id);
+    
+    if (existingPayment && existingPayment.status === 'paid') {
+      toast.error('Payment already completed for this booking');
+      return;
+    }
 
+    // Open payment modal
+    setSelectedBookingForPayment(booking);
+    setPaymentFormData({
+      amount: booking.totalPrice.toString(),
+      paymentMethod: 'MPesa',
+    });
+    setShowPaymentDialog(true);
+  };
+
+  const handleProcessPayment = async () => {
+    if (!selectedBookingForPayment) return;
+
+    if (!paymentFormData.amount || parseFloat(paymentFormData.amount) <= 0) {
+      toast.error('Please enter a valid payment amount');
+      return;
+    }
+
+    try {
       // Create payment
       await createPayment({
-        bookingId: booking.id,
-        customerId: booking.customerId,
-        amount: booking.totalPrice,
+        bookingId: selectedBookingForPayment.id,
+        customerId: selectedBookingForPayment.customerId,
+        amount: parseFloat(paymentFormData.amount),
         status: 'paid',
-        paymentMethod: 'Credit Card',
+        paymentMethod: paymentFormData.paymentMethod,
       });
 
       toast.success('Payment processed successfully!');
       
+      // Reset and close modal
+      setShowPaymentDialog(false);
+      setSelectedBookingForPayment(null);
+      setPaymentFormData({ amount: '', paymentMethod: 'MPesa' });
+      
       // Reload data
       const updatedPayments = await getPayments();
       setPayments(updatedPayments);
-      loadBookings();
+      await loadBookings();
     } catch (error) {
       toast.error('Failed to process payment');
     }
@@ -459,6 +487,77 @@ export function AdminBookings() {
                   Create Booking
                 </Button>
                 <Button variant="outline" onClick={() => setShowAddDialog(false)}>
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
+
+      {/* Payment Dialog */}
+      <Dialog.Root open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="fixed inset-0 bg-black/50" />
+          <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg p-6 w-full max-w-md">
+            <Dialog.Title className="text-2xl mb-4">Process Payment</Dialog.Title>
+            <Dialog.Description className="sr-only">
+              Process payment for a booking
+            </Dialog.Description>
+            <div className="space-y-4">
+              {selectedBookingForPayment && (
+                <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                  <div className="text-sm font-semibold mb-2">Booking Details</div>
+                  <div className="space-y-1 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Property:</span>
+                      <span>{getPropertyName(selectedBookingForPayment.propertyId)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Customer:</span>
+                      <span>{getCustomerName(selectedBookingForPayment.customerId)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Total:</span>
+                      <span className="font-semibold">${selectedBookingForPayment.totalPrice}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+              <div>
+                <label className="block text-sm mb-2">Payment Amount</label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={paymentFormData.amount}
+                  onChange={(e) => setPaymentFormData({ ...paymentFormData, amount: e.target.value })}
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm mb-2">Payment Method</label>
+                <select
+                  className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+                  value={paymentFormData.paymentMethod}
+                  onChange={(e) => setPaymentFormData({ ...paymentFormData, paymentMethod: e.target.value })}
+                  required
+                >
+                  <option value="MPesa">MPesa</option>
+                  <option value="Card">Card</option>
+                  <option value="Cash">Cash</option>
+                  <option value="Bank Transfer">Bank Transfer</option>
+                </select>
+              </div>
+              <div className="flex gap-4 pt-4">
+                <Button onClick={handleProcessPayment}>
+                  Process Payment
+                </Button>
+                <Button variant="outline" onClick={() => {
+                  setShowPaymentDialog(false);
+                  setSelectedBookingForPayment(null);
+                  setPaymentFormData({ amount: '', paymentMethod: 'MPesa' });
+                }}>
                   Cancel
                 </Button>
               </div>
