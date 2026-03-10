@@ -8,6 +8,7 @@ import { Contact } from "./pages/Contact";
 import { CreateAccount } from "./pages/CreateAccount";
 import { Login } from "./pages/Login";
 import { PropertyDetails } from "./pages/PropertyDetails";
+import { CustomerProfile } from "./pages/CustomerProfile";
 import { AdminLayout } from "./components/admin/AdminLayout";
 import { AdminProperties } from "./pages/admin/AdminProperties";
 import { AdminBookings } from "./pages/admin/AdminBookings";
@@ -42,6 +43,7 @@ export const router = createBrowserRouter([
           { path: "contact", Component: Contact },
           { path: "create-account", Component: CreateAccount },
           { path: "login", Component: Login },
+          { path: "profile", Component: CustomerProfile },
         ],
       },
       {

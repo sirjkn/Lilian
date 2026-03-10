@@ -79,18 +79,32 @@ async function fetchWithAuth(url: string, options: RequestInit = {}) {
     ...options.headers,
   };
 
-  const response = await fetch(url, { 
-    ...options, 
-    headers,
-    cache: 'no-cache'
-  });
-  
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: 'Request failed' }));
-    throw new Error(error.error || 'Request failed');
+  try {
+    const response = await fetch(url, { 
+      ...options, 
+      headers,
+      cache: 'no-cache'
+    });
+    
+    // Check if response is HTML (error page)
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('text/html')) {
+      throw new Error('API not available - received HTML instead of JSON');
+    }
+    
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ error: 'Request failed' }));
+      throw new Error(error.error || 'Request failed');
+    }
+    
+    return response.json();
+  } catch (error) {
+    // If it's a network error or API not available, throw a more specific error
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      throw new Error('API not available - please ensure the server is running');
+    }
+    throw error;
   }
-  
-  return response.json();
 }
 
 // Properties API
