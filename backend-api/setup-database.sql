@@ -8,6 +8,7 @@ DROP TABLE IF EXISTS customers CASCADE;
 DROP TABLE IF EXISTS properties CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
 DROP TABLE IF EXISTS hero_settings CASCADE;
+DROP TABLE IF EXISTS settings CASCADE;
 
 -- Users table (for authentication)
 CREATE TABLE users (
@@ -29,6 +30,7 @@ CREATE TABLE properties (
   bedrooms INTEGER NOT NULL,
   bathrooms INTEGER NOT NULL,
   guests INTEGER NOT NULL,
+  category VARCHAR(50),
   image TEXT,
   amenities TEXT[],
   available BOOLEAN DEFAULT true,
@@ -78,13 +80,15 @@ CREATE TABLE contact_submissions (
   created_at TIMESTAMP DEFAULT NOW()
 );
 
--- Hero settings table
-CREATE TABLE hero_settings (
-  id INTEGER PRIMARY KEY DEFAULT 1,
-  background_image TEXT,
-  created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW(),
-  CONSTRAINT single_row CHECK (id = 1)
+-- Settings table (replaces hero_settings)
+CREATE TABLE settings (
+  id SERIAL PRIMARY KEY,
+  category VARCHAR(50) NOT NULL,
+  key VARCHAR(100) NOT NULL,
+  value TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(category, key)
 );
 
 -- Create indexes for better performance
@@ -94,6 +98,7 @@ CREATE INDEX idx_payments_booking ON payments(booking_id);
 CREATE INDEX idx_payments_customer ON payments(customer_id);
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_customers_email ON customers(email);
+CREATE INDEX idx_settings_category ON settings(category);
 
 -- Insert sample data
 
@@ -108,12 +113,12 @@ INSERT INTO users (email, name, password_hash, role) VALUES
 ('customer@test.com', 'Test Customer', '$2b$10$sYc9z9K6RZ6rYK1ZiY6KkPXRZA6rYK1ZiY6KkQK6O1ZA.lHLLLLL7', 'customer');
 
 -- Sample properties
-INSERT INTO properties (title, description, price, location, bedrooms, bathrooms, guests, image, amenities) VALUES
-('Luxury Downtown Apartment', 'Beautiful modern apartment in the heart of downtown with stunning city views.', 150.00, 'New York, NY', 2, 2, 4, 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800', ARRAY['WiFi', 'Kitchen', 'Air Conditioning', 'TV', 'Workspace']),
-('Cozy Beach House', 'Relaxing beachfront property with private access to the beach.', 200.00, 'Malibu, CA', 3, 2, 6, 'https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?w=800', ARRAY['WiFi', 'Beach Access', 'BBQ Grill', 'Parking', 'Ocean View']),
-('Mountain Cabin Retreat', 'Secluded cabin in the mountains perfect for a peaceful getaway.', 120.00, 'Aspen, CO', 2, 1, 4, 'https://images.unsplash.com/photo-1542718610-a1d656d1884c?w=800', ARRAY['Fireplace', 'Hiking Trails', 'Pet Friendly', 'Kitchen', 'Hot Tub']),
-('Urban Loft Studio', 'Modern loft in trendy neighborhood with industrial charm.', 95.00, 'Portland, OR', 1, 1, 2, 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800', ARRAY['WiFi', 'Workspace', 'Full Kitchen', 'Gym Access']),
-('Lakefront Villa', 'Stunning villa with panoramic lake views and private dock.', 300.00, 'Lake Tahoe, NV', 4, 3, 8, 'https://images.unsplash.com/photo-1505142468610-359e7d316be0?w=800', ARRAY['Lake Access', 'Boat Dock', 'Fire Pit', 'Hot Tub', 'BBQ Grill']);
+INSERT INTO properties (title, description, price, location, bedrooms, bathrooms, guests, category, image, amenities) VALUES
+('Luxury Downtown Apartment', 'Beautiful modern apartment in the heart of downtown with stunning city views.', 150.00, 'New York, NY', 2, 2, 4, 'Apartment', 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800', ARRAY['WiFi', 'Kitchen', 'Air Conditioning', 'TV', 'Workspace']),
+('Cozy Beach House', 'Relaxing beachfront property with private access to the beach.', 200.00, 'Malibu, CA', 3, 2, 6, 'Beach House', 'https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?w=800', ARRAY['WiFi', 'Beach Access', 'BBQ Grill', 'Parking', 'Ocean View']),
+('Mountain Cabin Retreat', 'Secluded cabin in the mountains perfect for a peaceful getaway.', 120.00, 'Aspen, CO', 2, 1, 4, 'Cabin', 'https://images.unsplash.com/photo-1542718610-a1d656d1884c?w=800', ARRAY['Fireplace', 'Hiking Trails', 'Pet Friendly', 'Kitchen', 'Hot Tub']),
+('Urban Loft Studio', 'Modern loft in trendy neighborhood with industrial charm.', 95.00, 'Portland, OR', 1, 1, 2, 'Loft', 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800', ARRAY['WiFi', 'Workspace', 'Full Kitchen', 'Gym Access']),
+('Lakefront Villa', 'Stunning villa with panoramic lake views and private dock.', 300.00, 'Lake Tahoe, NV', 4, 3, 8, 'Villa', 'https://images.unsplash.com/photo-1505142468610-359e7d316be0?w=800', ARRAY['Lake Access', 'Boat Dock', 'Fire Pit', 'Hot Tub', 'BBQ Grill']);
 
 -- Sample customers
 INSERT INTO customers (name, email, phone) VALUES
@@ -140,8 +145,19 @@ INSERT INTO payments (booking_id, customer_id, amount, status, payment_method) V
  1400.00, 'pending', 'Credit Card');
 
 -- Default hero background (Nairobi cityscape)
-INSERT INTO hero_settings (id, background_image) VALUES
-(1, 'https://images.unsplash.com/photo-1741991109886-90e70988f27b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxOYWlyb2JpJTIwS2VueWElMjBjaXR5c2NhcGUlMjBza3lsaW5lfGVufDF8fHx8MTc3MzAzNTM5OXww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral');
+INSERT INTO settings (category, key, value) VALUES
+('hero', 'background_image', 'https://images.unsplash.com/photo-1741991109886-90e70988f27b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxOYWlyb2JpJTIwS2VueWElMjBjaXR5c2NhcGUlMjBza3lsaW5lfGVufDF8fHx8MTc3MzAzNTM5OXww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral'),
+('general', 'site_name', 'Skyway Suites'),
+('general', 'site_email', 'info@skywaysuites.com'),
+('general', 'currency', 'USD'),
+('general', 'timezone', 'America/New_York'),
+('cloudinary', 'cloud_name', 'dc5d5zfos'),
+('cloudinary', 'api_key', '382325619466152'),
+('cloudinary', 'api_secret', '-TZoR9QSDk1lMfEOdQc-Tv59f9A'),
+('maintenance', 'enabled', 'false'),
+('maintenance', 'message', 'We''re currently performing scheduled maintenance to improve your experience.'),
+('maintenance', 'estimated_time', 'We''ll be back soon')
+ON CONFLICT (category, key) DO NOTHING;
 
 -- Verify tables were created
 SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';

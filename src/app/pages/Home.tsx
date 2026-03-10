@@ -22,13 +22,13 @@ export function Home() {
     <div>
       {/* Hero Section */}
       <section
-        className="relative h-[400px] bg-cover bg-center"
+        className="relative h-[500px] bg-cover bg-center"
         style={{
           backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('${heroBackground}')`,
         }}
       >
         <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-center text-white max-w-4xl px-4">
+          <div className="text-center text-white max-w-3xl px-4">
             <h1 className="text-5xl md:text-6xl mb-6">
               Find Your Perfect Stay !
             </h1>

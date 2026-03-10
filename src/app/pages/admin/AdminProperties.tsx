@@ -29,6 +29,7 @@ export function AdminProperties() {
     bedrooms: '',
     bathrooms: '',
     guests: '',
+    category: '',
     image: '',
     amenities: '',
   });
@@ -72,6 +73,7 @@ export function AdminProperties() {
         bedrooms: Number(formData.bedrooms),
         bathrooms: Number(formData.bathrooms),
         guests: Number(formData.guests),
+        category: formData.category,
         image: formData.image || 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800',
         amenities: formData.amenities.split(',').map(a => a.trim()),
         available: true,
@@ -109,6 +111,7 @@ export function AdminProperties() {
         bedrooms: property.bedrooms.toString(),
         bathrooms: property.bathrooms.toString(),
         guests: property.guests.toString(),
+        category: property.category,
         image: property.image,
         amenities: property.amenities.join(', '),
       });
@@ -128,6 +131,7 @@ export function AdminProperties() {
           bedrooms: Number(formData.bedrooms),
           bathrooms: Number(formData.bathrooms),
           guests: Number(formData.guests),
+          category: formData.category,
           image: formData.image || 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800',
           amenities: formData.amenities.split(',').map(a => a.trim()),
           available: true,
@@ -206,6 +210,7 @@ export function AdminProperties() {
       bedrooms: '',
       bathrooms: '',
       guests: '',
+      category: '',
       image: '',
       amenities: '',
     });
@@ -395,6 +400,21 @@ export function AdminProperties() {
                 </div>
               </div>
               <div>
+                <label className="block text-sm mb-2">Category</label>
+                <select
+                  value={formData.category}
+                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+                  required
+                >
+                  <option value="">Select Category</option>
+                  <option value="Studio">Studio</option>
+                  <option value="1 Bedroom">1 Bedroom</option>
+                  <option value="2 Bedroom">2 Bedroom</option>
+                  <option value="3 Bedroom">3 Bedroom</option>
+                </select>
+              </div>
+              <div>
                 <label className="block text-sm mb-2">Image URL</label>
                 <Input
                   value={formData.image}
@@ -550,6 +570,21 @@ export function AdminProperties() {
                     required
                   />
                 </div>
+              </div>
+              <div>
+                <label className="block text-sm mb-2">Category</label>
+                <select
+                  value={formData.category}
+                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+                  required
+                >
+                  <option value="">Select Category</option>
+                  <option value="Studio">Studio</option>
+                  <option value="1 Bedroom">1 Bedroom</option>
+                  <option value="2 Bedroom">2 Bedroom</option>
+                  <option value="3 Bedroom">3 Bedroom</option>
+                </select>
               </div>
               <div>
                 <label className="block text-sm mb-2">Image URL</label>

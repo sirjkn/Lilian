@@ -1,14 +1,17 @@
 import { useState, useEffect } from 'react';
-import { Save, Bell, Users as UsersIcon, Settings as SettingsIcon, Image, Mail, MessageCircle, CheckCircle, Upload, X } from 'lucide-react';
+import { Save, Bell, Users as UsersIcon, Settings as SettingsIcon, Image, Mail, MessageCircle, CheckCircle, Upload, X, Wrench, Edit, Trash2 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
 import * as Tabs from '@radix-ui/react-tabs';
 import * as Select from '@radix-ui/react-select';
+import * as Switch from '@radix-ui/react-switch';
+import * as Dialog from '@radix-ui/react-dialog';
 import { toast } from 'sonner';
-import { getHeroSettings, updateHeroSettings } from '../../lib/api';
+import { getHeroSettings, updateHeroSettings, getMaintenanceSettings, updateMaintenanceSettings } from '../../lib/api';
 import { compressImageToWebP } from '../../lib/imageUtils';
 import { uploadToCloudinary, getCloudinaryConfig, saveCloudinaryConfig } from '../../lib/cloudinaryUpload';
+import { UsersManagement } from '../../components/UsersManagement';
 
 export function AdminSettings() {
   const [activeTab, setActiveTab] = useState('general');
@@ -42,9 +45,15 @@ export function AdminSettings() {
     bookingConfirmed: { email: true, whatsapp: true },
   });
 
+  // Maintenance Mode State
+  const [maintenanceEnabled, setMaintenanceEnabled] = useState(false);
+  const [maintenanceMessage, setMaintenanceMessage] = useState("We're currently performing scheduled maintenance to improve your experience.");
+  const [maintenanceEstimatedTime, setMaintenanceEstimatedTime] = useState("We'll be back soon");
+
   useEffect(() => {
     loadHeroSettings();
     loadCloudinaryConfig();
+    loadMaintenanceSettings();
   }, []);
 
   const loadCloudinaryConfig = async () => {
@@ -133,6 +142,32 @@ export function AdminSettings() {
       toast.error(error.message || 'Failed to upload image. Check your Cloudinary settings.');
     } finally {
       setIsUploading(false);
+    }
+  };
+
+  const loadMaintenanceSettings = async () => {
+    try {
+      const settings = await getMaintenanceSettings();
+      if (settings) {
+        setMaintenanceEnabled(settings.enabled === 'true');
+        setMaintenanceMessage(settings.message || "We're currently performing scheduled maintenance to improve your experience.");
+        setMaintenanceEstimatedTime(settings.estimated_time || "We'll be back soon");
+      }
+    } catch (error) {
+      console.error('Failed to load maintenance settings');
+    }
+  };
+
+  const handleSaveMaintenanceSettings = async () => {
+    try {
+      await updateMaintenanceSettings({
+        enabled: maintenanceEnabled ? 'true' : 'false',
+        message: maintenanceMessage,
+        estimated_time: maintenanceEstimatedTime,
+      });
+      toast.success('Maintenance settings saved!');
+    } catch (error) {
+      toast.error('Failed to save maintenance settings');
     }
   };
 
@@ -398,118 +433,65 @@ export function AdminSettings() {
                 </Button>
               </CardContent>
             </Card>
+
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg">Maintenance Mode</CardTitle>
+                <CardDescription>Enable or disable maintenance mode for the application</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <Switch.Root
+                    checked={maintenanceEnabled}
+                    onCheckedChange={setMaintenanceEnabled}
+                    className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#6B7C3C] focus:ring-offset-2 ${
+                      maintenanceEnabled ? 'bg-[#6B7C3C]' : 'bg-gray-200'
+                    }`}
+                  >
+                    <Switch.Thumb
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
+                        maintenanceEnabled ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </Switch.Root>
+                  <span className="text-sm font-medium text-gray-900">Enable Maintenance Mode</span>
+                </div>
+                <div>
+                  <label className="block text-sm mb-2 font-medium">Maintenance Message</label>
+                  <Input 
+                    value={maintenanceMessage}
+                    onChange={(e) => setMaintenanceMessage(e.target.value)}
+                    placeholder="We are currently undergoing maintenance. Please check back later."
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm mb-2 font-medium">Estimated Time</label>
+                  <Input 
+                    value={maintenanceEstimatedTime}
+                    onChange={(e) => setMaintenanceEstimatedTime(e.target.value)}
+                    placeholder="We'll be back soon"
+                  />
+                </div>
+                <div className="p-3 bg-blue-50 rounded-md text-xs">
+                  <p className="mb-1.5"><strong>Setup Instructions:</strong></p>
+                  <ol className="list-decimal list-inside space-y-0.5 text-gray-700">
+                    <li>Enable maintenance mode to prevent user access</li>
+                    <li>Enter a message to display to users</li>
+                    <li>Save settings to apply changes</li>
+                  </ol>
+                </div>
+                <Button onClick={handleSaveMaintenanceSettings} size="sm">
+                  <Wrench className="h-3.5 w-3.5 mr-2" />
+                  Save Maintenance Settings
+                </Button>
+              </CardContent>
+            </Card>
           </div>
         </Tabs.Content>
 
         {/* Users & Roles */}
         <Tabs.Content value="users">
-          <div className="grid gap-4 max-w-3xl">
-            <Card>
-              <CardHeader className="pb-3">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <CardTitle className="text-lg">Admin Users</CardTitle>
-                    <CardDescription>Manage admin access and permissions</CardDescription>
-                  </div>
-                  <Button size="sm">
-                    <UsersIcon className="h-3.5 w-3.5 mr-2" />
-                    Add User
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="p-0">
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-gray-50">
-                      <tr className="border-b text-sm">
-                        <th className="text-left py-2 px-3 font-medium">Name</th>
-                        <th className="text-left py-2 px-3 font-medium">Email</th>
-                        <th className="text-left py-2 px-3 font-medium">Role</th>
-                        <th className="text-left py-2 px-3 font-medium">Status</th>
-                        <th className="text-left py-2 px-3 font-medium">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr className="border-b hover:bg-gray-50 text-sm">
-                        <td className="py-2 px-3">John Admin</td>
-                        <td className="py-2 px-3 text-gray-600">admin@skywaysuites.com</td>
-                        <td className="py-2 px-3">
-                          <span className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded text-xs">
-                            Super Admin
-                          </span>
-                        </td>
-                        <td className="py-2 px-3">
-                          <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs">
-                            Active
-                          </span>
-                        </td>
-                        <td className="py-2 px-3">
-                          <Button variant="outline" size="sm" className="h-7 text-xs">Edit</Button>
-                        </td>
-                      </tr>
-                      <tr className="border-b hover:bg-gray-50 text-sm">
-                        <td className="py-2 px-3">Sarah Manager</td>
-                        <td className="py-2 px-3 text-gray-600">sarah@skywaysuites.com</td>
-                        <td className="py-2 px-3">
-                          <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs">
-                            Manager
-                          </span>
-                        </td>
-                        <td className="py-2 px-3">
-                          <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs">
-                            Active
-                          </span>
-                        </td>
-                        <td className="py-2 px-3">
-                          <Button variant="outline" size="sm" className="h-7 text-xs">Edit</Button>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg">Role Permissions</CardTitle>
-                <CardDescription>Define what each role can access</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="p-3 border rounded-lg">
-                    <div className="font-semibold mb-2 text-sm">Super Admin</div>
-                    <div className="space-y-1.5 text-sm">
-                      <label className="flex items-center gap-2">
-                        <input type="checkbox" defaultChecked className="rounded" />
-                        Manage Properties
-                      </label>
-                      <label className="flex items-center gap-2">
-                        <input type="checkbox" defaultChecked className="rounded" />
-                        Manage Bookings
-                      </label>
-                      <label className="flex items-center gap-2">
-                        <input type="checkbox" defaultChecked className="rounded" />
-                        Manage Customers
-                      </label>
-                      <label className="flex items-center gap-2">
-                        <input type="checkbox" defaultChecked className="rounded" />
-                        Manage Payments
-                      </label>
-                      <label className="flex items-center gap-2">
-                        <input type="checkbox" defaultChecked className="rounded" />
-                        Access Settings
-                      </label>
-                    </div>
-                  </div>
-                  <Button onClick={() => toast.success('Permissions updated!')} size="sm">
-                    <Save className="h-3.5 w-3.5 mr-2" />
-                    Save Permissions
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          <UsersManagement />
         </Tabs.Content>
 
         {/* Notifications */}

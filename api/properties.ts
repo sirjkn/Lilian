@@ -12,6 +12,7 @@ function transformProperty(row: any) {
     bedrooms: row.bedrooms,
     bathrooms: row.bathrooms,
     guests: row.guests,
+    category: row.category,
     image: row.image,
     amenities: row.amenities || [],
     available: row.available,
@@ -60,6 +61,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           bedrooms, 
           bathrooms, 
           guests, 
+          category,
           image, 
           amenities, 
           available,
@@ -73,11 +75,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const result = await query(
           `UPDATE properties 
            SET title = $1, description = $2, price = $3, location = $4, bedrooms = $5, 
-               bathrooms = $6, guests = $7, image = $8, amenities = $9, available = $10,
-               ical_export_url = $11, airbnb_import_url = $12, booking_import_url = $13,
-               vrbo_import_url = $14, calendar_sync_enabled = $15
-           WHERE id = $16 RETURNING *`,
-          [title, description, price, location, bedrooms, bathrooms, guests, image, amenities, available,
+               bathrooms = $6, guests = $7, category = $8, image = $9, amenities = $10, available = $11,
+               ical_export_url = $12, airbnb_import_url = $13, booking_import_url = $14,
+               vrbo_import_url = $15, calendar_sync_enabled = $16
+           WHERE id = $17 RETURNING *`,
+          [title, description, price, location, bedrooms, bathrooms, guests, category, image, amenities, available,
            ical_export_url, airbnb_import_url, booking_import_url, vrbo_import_url, calendar_sync_enabled, id]
         );
 
@@ -109,6 +111,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         bedrooms, 
         bathrooms, 
         guests, 
+        category,
         image, 
         amenities,
         ical_export_url,
@@ -120,10 +123,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       const result = await query(
         `INSERT INTO properties 
-         (title, description, price, location, bedrooms, bathrooms, guests, image, amenities,
+         (title, description, price, location, bedrooms, bathrooms, guests, category, image, amenities,
           ical_export_url, airbnb_import_url, booking_import_url, vrbo_import_url, calendar_sync_enabled) 
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING *`,
-        [title, description, price, location, bedrooms, bathrooms, guests, image, amenities,
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) RETURNING *`,
+        [title, description, price, location, bedrooms, bathrooms, guests, category, image, amenities,
          ical_export_url, airbnb_import_url, booking_import_url, vrbo_import_url, calendar_sync_enabled]
       );
 

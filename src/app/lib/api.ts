@@ -11,6 +11,7 @@ export interface Property {
   bedrooms: number;
   bathrooms: number;
   guests: number;
+  category?: string; // Studio, 1 Bedroom, 2 Bedroom, 3 Bedroom
   image: string;
   images?: string[]; // Multiple images support
   amenities: string[];
@@ -53,6 +54,15 @@ export interface Payment {
 
 export interface HeroSettings {
   backgroundImage: string;
+}
+
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  role: 'admin' | 'customer';
+  createdAt: string;
+  status: string;
 }
 
 // Helper function to get auth token
@@ -208,6 +218,28 @@ export async function updateHeroSettings(settings: HeroSettings): Promise<HeroSe
   });
 }
 
+// Maintenance Mode API
+export interface MaintenanceSettings {
+  enabled: string; // 'true' or 'false'
+  message?: string;
+  estimated_time?: string;
+}
+
+export async function getMaintenanceSettings(): Promise<MaintenanceSettings | null> {
+  try {
+    return await fetchWithAuth(`${API_BASE_URL}/settings?category=maintenance`);
+  } catch (error) {
+    return null;
+  }
+}
+
+export async function updateMaintenanceSettings(settings: MaintenanceSettings): Promise<MaintenanceSettings> {
+  return await fetchWithAuth(`${API_BASE_URL}/settings?category=maintenance`, {
+    method: 'PUT',
+    body: JSON.stringify(settings),
+  });
+}
+
 // Helper function to check for booking conflicts (double booking prevention)
 export function hasBookingConflict(
   checkIn: string,
@@ -258,4 +290,29 @@ export function hasBookingConflict(
 export function generateICalUrl(propertyId: string): string {
   const baseUrl = window.location.origin;
   return `${baseUrl}/api/calendar/${propertyId}.ics`;
+}
+
+// Users API
+export async function getUsers(): Promise<User[]> {
+  return await fetchWithAuth(`${API_BASE_URL}/users`);
+}
+
+export async function createUser(user: { email: string; password: string; name: string; role: 'admin' | 'customer' }): Promise<User> {
+  return await fetchWithAuth(`${API_BASE_URL}/users`, {
+    method: 'POST',
+    body: JSON.stringify(user),
+  });
+}
+
+export async function updateUser(id: string, user: { email?: string; name?: string; role?: 'admin' | 'customer'; password?: string }): Promise<User> {
+  return await fetchWithAuth(`${API_BASE_URL}/users?id=${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(user),
+  });
+}
+
+export async function deleteUser(id: string): Promise<void> {
+  return await fetchWithAuth(`${API_BASE_URL}/users?id=${id}`, {
+    method: 'DELETE',
+  });
 }
