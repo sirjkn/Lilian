@@ -13,14 +13,22 @@ interface AuthContextType {
   logout: () => void;
   signup: (email: string, password: string, name: string) => Promise<void>;
   isAdmin: boolean;
+  isPreviewMode: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
+// Helper to detect if we're in Figma Make preview
+const isInPreviewMode = () => {
+  const hostname = window.location.hostname;
+  return !hostname.includes('vercel.app') && !hostname.includes('localhost');
+};
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const isPreviewMode = isInPreviewMode();
 
   // Check for existing token on mount
   useEffect(() => {
@@ -41,6 +49,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string) => {
     try {
+      // In preview mode, use mock authentication
+      if (isPreviewMode) {
+        console.warn('Preview Mode: Using mock authentication (API not available)');
+        
+        // Mock user data
+        const mockUser: User = {
+          id: 'preview-user-' + Date.now(),
+          email: email,
+          name: email.split('@')[0],
+          role: email.includes('admin') ? 'admin' : 'customer',
+        };
+        
+        const mockToken = 'preview-token-' + btoa(email);
+        
+        // Simulate API delay
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        setUser(mockUser);
+        localStorage.setItem('token', mockToken);
+        localStorage.setItem('user', JSON.stringify(mockUser));
+        return;
+      }
+
+      // Real API call for production
       const response = await fetch(`${API_BASE_URL}/auth?action=login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -56,7 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         data = JSON.parse(responseText);
       } catch (parseError) {
         console.error('Failed to parse response as JSON:', responseText.substring(0, 200));
-        throw new Error(`Server returned invalid response. Expected JSON but got: ${responseText.substring(0, 100)}...`);
+        throw new Error('Server is not responding correctly. Please try again later.');
       }
 
       if (!response.ok) {
@@ -78,6 +110,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signup = async (email: string, password: string, name: string) => {
     try {
+      // In preview mode, use mock authentication
+      if (isPreviewMode) {
+        console.warn('Preview Mode: Using mock authentication (API not available)');
+        
+        // Mock user data
+        const mockUser: User = {
+          id: 'preview-user-' + Date.now(),
+          email: email,
+          name: name,
+          role: 'customer',
+        };
+        
+        const mockToken = 'preview-token-' + btoa(email);
+        
+        // Simulate API delay
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        setUser(mockUser);
+        localStorage.setItem('token', mockToken);
+        localStorage.setItem('user', JSON.stringify(mockUser));
+        return;
+      }
+
+      // Real API call for production
       const response = await fetch(`${API_BASE_URL}/auth?action=signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -93,7 +149,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         data = JSON.parse(responseText);
       } catch (parseError) {
         console.error('Failed to parse response as JSON:', responseText.substring(0, 200));
-        throw new Error(`Server returned invalid response. Expected JSON but got: ${responseText.substring(0, 100)}...`);
+        throw new Error('Server is not responding correctly. Please try again later.');
       }
 
       if (!response.ok) {
@@ -122,7 +178,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isAdmin = user?.role === 'admin';
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, signup, isAdmin }}>
+    <AuthContext.Provider value={{ user, login, logout, signup, isAdmin, isPreviewMode }}>
       {children}
     </AuthContext.Provider>
   );

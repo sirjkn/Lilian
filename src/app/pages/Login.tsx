@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router';
-import { Building2 } from 'lucide-react';
+import { Building2, Info } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 export function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { login } = useAuth();
+  const { login, isPreviewMode } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -41,6 +41,19 @@ export function Login() {
           <CardDescription>Login to your Skyway Suites account</CardDescription>
         </CardHeader>
         <CardContent>
+          {/* Preview Mode Notice */}
+          {isPreviewMode && (
+            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-start gap-2">
+              <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+              <div className="text-sm text-blue-900">
+                <p className="font-semibold mb-1">Preview Mode</p>
+                <p className="text-xs text-blue-700">
+                  You can login with any email/password. Full authentication will work when deployed to Vercel.
+                </p>
+              </div>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm mb-2">Email</label>
@@ -48,7 +61,7 @@ export function Login() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="your@email.com"
+                placeholder={isPreviewMode ? "any@email.com (preview mode)" : "your@email.com"}
                 required
               />
             </div>
@@ -58,7 +71,7 @@ export function Login() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
+                placeholder={isPreviewMode ? "any password (preview mode)" : "Enter your password"}
                 required
               />
             </div>
