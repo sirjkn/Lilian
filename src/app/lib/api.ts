@@ -203,16 +203,56 @@ export async function getPropertyById(id: string): Promise<Property | null> {
 export const getProperty = getPropertyById;
 
 export async function createProperty(property: Omit<Property, 'id'>): Promise<Property | null> {
+  // Transform camelCase to snake_case for API
+  const apiProperty = {
+    title: property.title,
+    description: property.description,
+    price: property.price,
+    location: property.location,
+    bedrooms: property.bedrooms,
+    bathrooms: property.bathrooms,
+    guests: property.guests,
+    category: property.category,
+    image: property.image,
+    amenities: property.amenities,
+    available: property.available,
+    ical_export_url: property.icalUrl || '',
+    airbnb_import_url: property.airbnbCalendarUrl || '',
+    booking_import_url: property.bookingCalendarUrl || '',
+    vrbo_import_url: property.vrboCalendarUrl || '',
+    calendar_sync_enabled: property.calendarSyncEnabled || false,
+  };
+  
   return await fetchWithAuth(`${API_BASE_URL}?endpoint=properties`, {
     method: 'POST',
-    body: JSON.stringify(property),
+    body: JSON.stringify(apiProperty),
   });
 }
 
 export async function updateProperty(id: string, property: Partial<Property>): Promise<Property | null> {
+  // Transform camelCase to snake_case for API
+  const apiProperty: any = {};
+  
+  if (property.title !== undefined) apiProperty.title = property.title;
+  if (property.description !== undefined) apiProperty.description = property.description;
+  if (property.price !== undefined) apiProperty.price = property.price;
+  if (property.location !== undefined) apiProperty.location = property.location;
+  if (property.bedrooms !== undefined) apiProperty.bedrooms = property.bedrooms;
+  if (property.bathrooms !== undefined) apiProperty.bathrooms = property.bathrooms;
+  if (property.guests !== undefined) apiProperty.guests = property.guests;
+  if (property.category !== undefined) apiProperty.category = property.category;
+  if (property.image !== undefined) apiProperty.image = property.image;
+  if (property.amenities !== undefined) apiProperty.amenities = property.amenities;
+  if (property.available !== undefined) apiProperty.available = property.available;
+  if (property.icalUrl !== undefined) apiProperty.ical_export_url = property.icalUrl;
+  if (property.airbnbCalendarUrl !== undefined) apiProperty.airbnb_import_url = property.airbnbCalendarUrl;
+  if (property.bookingCalendarUrl !== undefined) apiProperty.booking_import_url = property.bookingCalendarUrl;
+  if (property.vrboCalendarUrl !== undefined) apiProperty.vrbo_import_url = property.vrboCalendarUrl;
+  if (property.calendarSyncEnabled !== undefined) apiProperty.calendar_sync_enabled = property.calendarSyncEnabled;
+  
   return await fetchWithAuth(`${API_BASE_URL}?endpoint=properties&id=${id}`, {
     method: 'PUT',
-    body: JSON.stringify(property),
+    body: JSON.stringify(apiProperty),
   });
 }
 
