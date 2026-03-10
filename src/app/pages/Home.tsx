@@ -10,7 +10,7 @@ export function Home() {
   const [heroBackground, setHeroBackground] = useState('https://images.unsplash.com/photo-1741991109886-90e70988f27b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxOYWlyb2JpJTIwS2VueWElMjBjaXR5c2NhcGUlMjBza3lsaW5lfGVufDF8fHx8MTc3MzAzNTM5OXww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral');
 
   useEffect(() => {
-    getProperties().then((data) => setProperties(data.slice(0, 3)));
+    getProperties().then((data) => setProperties(data.slice(0, 6)));
     getHeroSettings().then((settings) => {
       if (settings?.backgroundImage) {
         setHeroBackground(settings.backgroundImage);
@@ -35,6 +35,26 @@ export function Home() {
             <p className="text-xl mb-8">
               Discover unforgettable experiences around in Nairobi and its Environs
             </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Featured Properties */}
+      <section className="py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center mb-12">
+            <div>
+              <h2 className="text-3xl mb-2">Featured Properties</h2>
+              <p className="text-gray-600">Handpicked stays for your next adventure</p>
+            </div>
+            <Link to="/properties">
+              <Button variant="outline">View All</Button>
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {properties.map((property) => (
+              <PropertyCard key={property.id} property={property} />
+            ))}
           </div>
         </div>
       </section>
@@ -101,26 +121,6 @@ export function Home() {
                 Competitive pricing with no hidden fees or surprise charges
               </p>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Featured Properties */}
-      <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center mb-12">
-            <div>
-              <h2 className="text-3xl mb-2">Featured Properties</h2>
-              <p className="text-gray-600">Handpicked stays for your next adventure</p>
-            </div>
-            <Link to="/properties">
-              <Button variant="outline">View All</Button>
-            </Link>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {properties.map((property) => (
-              <PropertyCard key={property.id} property={property} />
-            ))}
           </div>
         </div>
       </section>

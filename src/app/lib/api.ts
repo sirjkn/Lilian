@@ -148,9 +148,12 @@ async function fetchWithAuth(url: string, options: RequestInit = {}) {
     const contentType = response.headers.get('content-type');
     if (contentType && contentType.includes('text/html')) {
       // API is not available (deployment issue)
-      if (isProduction()) {
-        console.error('❌ API endpoint returned HTML - not deployed correctly');
-      }
+      console.error('⚠️ API returned HTML instead of JSON - API routes not deployed correctly');
+      console.error('📋 DEPLOYMENT ISSUE DETECTED:');
+      console.error('   1. Vercel serverless functions may not be deployed');
+      console.error('   2. Check that /api folder is included in deployment');
+      console.error('   3. Verify vercel.json configuration');
+      console.error('   4. Try redeploying: vercel --prod');
       throw new Error('API_NOT_DEPLOYED');
     }
     
@@ -396,7 +399,7 @@ export function parseICalDates(icalData: string): Array<{ start: string; end: st
 
 // Check Airbnb calendar availability
 export async function checkAirbnbAvailability(
-  property: Property,
+  propertyId: string,
   checkIn: string,
   checkOut: string
 ): Promise<{ available: boolean; conflictDate?: string }>;

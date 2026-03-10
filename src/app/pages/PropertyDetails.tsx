@@ -331,7 +331,7 @@ export function PropertyDetails() {
             <Card className="sticky top-24">
               <CardHeader>
                 <CardTitle className="flex justify-between items-center">
-                  <span className="text-2xl">${property.price}</span>
+                  <span className="text-2xl">KES {property.price.toLocaleString()}</span>
                   <span className="text-sm font-normal text-gray-600">per night</span>
                 </CardTitle>
               </CardHeader>
@@ -450,8 +450,8 @@ export function PropertyDetails() {
                       <div className="bg-gray-50 rounded-lg p-3 space-y-2 border border-gray-200">
                         <div className="text-xs font-semibold mb-2">Price Breakdown</div>
                         <div className="flex justify-between text-xs">
-                          <span className="text-gray-600">${property.price} × {numberOfDays} night{numberOfDays > 1 ? 's' : ''}</span>
-                          <span>${basePrice.toFixed(2)}</span>
+                          <span className="text-gray-600">KES {property.price.toLocaleString()} × {numberOfDays} night{numberOfDays > 1 ? 's' : ''}</span>
+                          <span>KES {basePrice.toLocaleString()}</span>
                         </div>
                         {discountPercent > 0 && (
                           <div className="flex justify-between text-xs text-[#6B7C3C]">
@@ -459,13 +459,13 @@ export function PropertyDetails() {
                               <Tag className="h-3 w-3" />
                               {discountPercent}% Discount
                             </span>
-                            <span>-${discountAmount.toFixed(2)}</span>
+                            <span>-KES {discountAmount.toLocaleString()}</span>
                           </div>
                         )}
                         <div className="border-t border-gray-300 pt-2 mt-2"></div>
                         <div className="flex justify-between font-semibold text-sm">
                           <span>Total</span>
-                          <span>${finalPrice.toFixed(2)}</span>
+                          <span>KES {Math.round(finalPrice).toLocaleString()}</span>
                         </div>
                       </div>
                     );

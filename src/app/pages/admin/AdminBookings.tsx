@@ -78,12 +78,14 @@ export function AdminBookings() {
   };
 
   const getBookingStatus = (booking: Booking) => {
-    // Find payment for this booking
-    const payment = payments.find(p => p.bookingId === booking.id);
+    // Calculate total paid amount for this booking
+    const totalPaid = getTotalPaid(booking.id);
     
-    if (!payment || payment.status === 'pending') {
+    if (totalPaid === 0) {
       return 'pending payment';
-    } else if (payment.status === 'paid' && payment.amount >= booking.totalPrice) {
+    } else if (totalPaid < booking.totalPrice) {
+      return 'partial payment';
+    } else if (totalPaid >= booking.totalPrice) {
       return 'confirmed';
     }
     
@@ -93,6 +95,7 @@ export function AdminBookings() {
   const getStatusColor = (status: string) => {
     const colors = {
       'pending payment': 'bg-yellow-100 text-yellow-700',
+      'partial payment': 'bg-orange-100 text-orange-700',
       pending: 'bg-yellow-100 text-yellow-700',
       confirmed: 'bg-green-100 text-green-700',
       cancelled: 'bg-red-100 text-red-700',
@@ -111,19 +114,31 @@ export function AdminBookings() {
     return customer?.name || 'Unknown Customer';
   };
 
+  // Calculate total amount paid for a booking
+  const getTotalPaid = (bookingId: string) => {
+    const bookingPayments = payments.filter(p => p.bookingId === bookingId && p.status === 'paid');
+    return bookingPayments.reduce((sum, payment) => sum + payment.amount, 0);
+  };
+
+  // Calculate remaining balance for a booking
+  const getRemainingBalance = (booking: Booking) => {
+    const totalPaid = getTotalPaid(booking.id);
+    return booking.totalPrice - totalPaid;
+  };
+
   const handleMakePayment = async (booking: Booking) => {
-    // Check if payment already exists
-    const existingPayment = payments.find(p => p.bookingId === booking.id);
+    // Calculate remaining balance
+    const remaining = getRemainingBalance(booking);
     
-    if (existingPayment && existingPayment.status === 'paid') {
+    if (remaining <= 0) {
       toast.error('Payment already completed for this booking');
       return;
     }
 
-    // Open payment modal
+    // Open payment modal with remaining balance as default amount
     setSelectedBookingForPayment(booking);
     setPaymentFormData({
-      amount: booking.totalPrice.toString(),
+      amount: remaining.toString(),
       paymentMethod: 'MPesa',
     });
     setShowPaymentDialog(true);
@@ -365,7 +380,37 @@ export function AdminBookings() {
                     <td className="py-2 px-3 text-gray-600">{getCustomerName(booking.customerId)}</td>
                     <td className="py-2 px-3 text-gray-600">{booking.checkIn}</td>
                     <td className="py-2 px-3 text-gray-600">{booking.checkOut}</td>
-                    <td className="py-2 px-3 font-semibold">${booking.totalPrice}</td>
+                    <td className="py-2 px-3">
+                      {(() => {
+                        const remainingBalance = getRemainingBalance(booking);
+                        const totalPaid = getTotalPaid(booking.id);
+                        
+                        if (remainingBalance > 0 && totalPaid > 0) {
+                          return (
+                            <div className="space-y-0.5">
+                              <div className="font-semibold text-orange-600">
+                                KES {remainingBalance.toLocaleString()}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                (Paid: KES {totalPaid.toLocaleString()})
+                              </div>
+                            </div>
+                          );
+                        } else if (remainingBalance === 0) {
+                          return (
+                            <div className="font-semibold text-green-600">
+                              Fully Paid
+                            </div>
+                          );
+                        } else {
+                          return (
+                            <div className="font-semibold">
+                              KES {booking.totalPrice.toLocaleString()}
+                            </div>
+                          );
+                        }
+                      })()}
+                    </td>
                     <td className="py-2 px-3">
                       <span className={`px-2 py-0.5 rounded text-xs ${getStatusColor(getBookingStatus(booking))}`}>
                         {getBookingStatus(booking)}
@@ -373,7 +418,7 @@ export function AdminBookings() {
                     </td>
                     <td className="py-2 px-3">
                       <div className="flex gap-2">
-                        {getBookingStatus(booking) === 'pending payment' && (
+                        {(getBookingStatus(booking) === 'pending payment' || getBookingStatus(booking) === 'partial payment') && (
                           <Button
                             variant="outline"
                             size="sm"
@@ -417,7 +462,7 @@ export function AdminBookings() {
                 <Combobox
                   value={formData.propertyId}
                   onChange={(value) => setFormData({ ...formData, propertyId: value })}
-                  options={properties.map(p => ({ value: p.id, label: `${p.title} - $${p.price}/night` }))}
+                  options={properties.map(p => ({ value: p.id, label: `${p.title} - KES ${p.price.toLocaleString()}/night` }))}
                   placeholder="Select a property"
                   searchPlaceholder="Search properties..."
                 />
@@ -502,8 +547,8 @@ export function AdminBookings() {
                   <div className="bg-gray-50 rounded-lg p-4 space-y-2 border border-gray-200">
                     <div className="text-sm font-semibold mb-2">Price Breakdown</div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">${property.price} × {numberOfDays} night{numberOfDays > 1 ? 's' : ''}</span>
-                      <span>${basePrice.toFixed(2)}</span>
+                      <span className="text-gray-600">KES {property.price.toLocaleString()} × {numberOfDays} night{numberOfDays > 1 ? 's' : ''}</span>
+                      <span>KES {basePrice.toLocaleString()}</span>
                     </div>
                     {discountPercent > 0 && (
                       <div className="flex justify-between text-sm text-[#6B7C3C]">
@@ -511,13 +556,13 @@ export function AdminBookings() {
                           <Tag className="h-3 w-3" />
                           {discountPercent}% Discount ({numberOfDays >= 30 ? '1 month+' : '7 days+'})
                         </span>
-                        <span>-${discountAmount.toFixed(2)}</span>
+                        <span>-KES {discountAmount.toLocaleString()}</span>
                       </div>
                     )}
                     <div className="border-t border-gray-300 pt-2 mt-2"></div>
                     <div className="flex justify-between font-semibold">
                       <span>Total</span>
-                      <span className="text-lg">${finalPrice.toFixed(2)}</span>
+                      <span className="text-lg">KES {Math.round(finalPrice).toLocaleString()}</span>
                     </div>
                   </div>
                 );
@@ -546,25 +591,42 @@ export function AdminBookings() {
               Process payment for a booking
             </Dialog.Description>
             <div className="space-y-4">
-              {selectedBookingForPayment && (
-                <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                  <div className="text-sm font-semibold mb-2">Booking Details</div>
-                  <div className="space-y-1 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Property:</span>
-                      <span>{getPropertyName(selectedBookingForPayment.propertyId)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Customer:</span>
-                      <span>{getCustomerName(selectedBookingForPayment.customerId)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Total:</span>
-                      <span className="font-semibold">${selectedBookingForPayment.totalPrice}</span>
+              {selectedBookingForPayment && (() => {
+                const totalPaid = getTotalPaid(selectedBookingForPayment.id);
+                const remainingBalance = getRemainingBalance(selectedBookingForPayment);
+                
+                return (
+                  <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                    <div className="text-sm font-semibold mb-2">Booking Details</div>
+                    <div className="space-y-1 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Property:</span>
+                        <span>{getPropertyName(selectedBookingForPayment.propertyId)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Customer:</span>
+                        <span>{getCustomerName(selectedBookingForPayment.customerId)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Total Price:</span>
+                        <span className="font-semibold">KES {selectedBookingForPayment.totalPrice.toLocaleString()}</span>
+                      </div>
+                      {totalPaid > 0 && (
+                        <>
+                          <div className="flex justify-between text-green-600">
+                            <span>Paid:</span>
+                            <span className="font-semibold">KES {totalPaid.toLocaleString()}</span>
+                          </div>
+                          <div className="flex justify-between text-orange-600 border-t border-gray-300 pt-1 mt-1">
+                            <span className="font-semibold">Remaining Balance:</span>
+                            <span className="font-semibold">KES {remainingBalance.toLocaleString()}</span>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
-                </div>
-              )}
+                );
+              })()}
               <div>
                 <label className="block text-sm mb-2">Payment Amount</label>
                 <Input

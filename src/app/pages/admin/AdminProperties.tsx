@@ -364,7 +364,7 @@ export function AdminProperties() {
                         </div>
                       </td>
                       <td className="py-2 px-3 text-gray-600">{property.location}</td>
-                      <td className="py-2 px-3 font-semibold">${property.price}</td>
+                      <td className="py-2 px-3 font-semibold">KES {property.price.toLocaleString()}</td>
                       <td className="py-2 px-3 text-gray-600">{property.bedrooms}</td>
                       <td className="py-2 px-3 text-gray-600">{property.guests}</td>
                       <td className="py-2 px-3">

@@ -57,7 +57,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
           )}
           {/* Price Badge - Positioned inside photo */}
           <div className="absolute bottom-3 right-3 bg-red-600 text-white px-3 py-1.5 rounded-md font-semibold shadow-lg">
-            ${property.price}/night
+            KES {property.price.toLocaleString()}/night
           </div>
         </div>
         <CardContent className="p-4">
