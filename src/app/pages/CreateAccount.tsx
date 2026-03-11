@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 export function CreateAccount() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const { signup, isPreviewMode } = useAuth();
@@ -25,7 +26,7 @@ export function CreateAccount() {
     }
 
     try {
-      await signup(email, password, name);
+      await signup(email, password, name, phone);
       toast.success('Account created successfully!');
       
       // Get return URL with booking state
@@ -89,6 +90,16 @@ export function CreateAccount() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder={isPreviewMode ? "any@email.com (preview mode)" : "your@email.com"}
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm mb-2">Phone Number</label>
+              <Input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="123-456-7890"
                 required
               />
             </div>

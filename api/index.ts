@@ -127,9 +127,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       if (action === 'signup' && req.method === 'POST') {
-        const { email, password, name } = req.body;
-        if (!email || !password || !name) {
-          return res.status(400).json({ error: 'Email, password, and name are required' });
+        const { email, password, name, phone } = req.body;
+        if (!email || !password || !name || !phone) {
+          return res.status(400).json({ error: 'Email, password, name, and phone are required' });
         }
         const existingUser = await query('SELECT * FROM users WHERE email = $1', [email]);
         if (existingUser.rows.length > 0) {
@@ -144,8 +144,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         
         // Also create a customer record with the same ID for bookings
         await query(
-          'INSERT INTO customers (id, email, name) VALUES ($1, $2, $3)',
-          [user.id, email, name]
+          'INSERT INTO customers (id, email, name, phone) VALUES ($1, $2, $3, $4)',
+          [user.id, email, name, phone]
         );
         
         const token = generateToken(user.id);

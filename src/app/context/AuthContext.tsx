@@ -11,7 +11,7 @@ interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
-  signup: (email: string, password: string, name: string) => Promise<void>;
+  signup: (email: string, password: string, name: string, phone: string) => Promise<void>;
   isAdmin: boolean;
   isPreviewMode: boolean;
 }
@@ -135,7 +135,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const signup = async (email: string, password: string, name: string) => {
+  const signup = async (email: string, password: string, name: string, phone: string) => {
     try {
       // In preview mode, use mock authentication
       if (isPreviewMode) {
@@ -164,7 +164,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const response = await fetch(`${API_BASE_URL}?endpoint=auth&action=signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, name }),
+        body: JSON.stringify({ email, password, name, phone }),
       });
 
       // Get response text first to see what we're getting
