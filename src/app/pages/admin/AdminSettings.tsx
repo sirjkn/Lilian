@@ -233,9 +233,13 @@ export function AdminSettings() {
         if (settings.whatsappFromNumber) setWhatsappFromNumber(settings.whatsappFromNumber);
         if (settings.wesendrApiKey) setWesendrApiKey(settings.wesendrApiKey);
         
-        // Load notification actions
+        // Load notification actions with proper validation and defaults
         if (settings.notificationActions) {
-          setNotificationActions(settings.notificationActions);
+          setNotificationActions({
+            accountCreated: settings.notificationActions.accountCreated || { email: true, whatsapp: true },
+            bookingCreated: settings.notificationActions.bookingCreated || { email: true, whatsapp: true },
+            bookingConfirmed: settings.notificationActions.bookingConfirmed || { email: true, whatsapp: true },
+          });
         }
       }
     } catch (error) {
@@ -795,7 +799,7 @@ export function AdminSettings() {
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input 
                         type="checkbox" 
-                        checked={notificationActions.accountCreated.email}
+                        checked={notificationActions?.accountCreated?.email || false}
                         onChange={(e) => setNotificationActions({
                           ...notificationActions,
                           accountCreated: { ...notificationActions.accountCreated, email: e.target.checked }
@@ -808,7 +812,7 @@ export function AdminSettings() {
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input 
                         type="checkbox" 
-                        checked={notificationActions.accountCreated.whatsapp}
+                        checked={notificationActions?.accountCreated?.whatsapp || false}
                         onChange={(e) => setNotificationActions({
                           ...notificationActions,
                           accountCreated: { ...notificationActions.accountCreated, whatsapp: e.target.checked }
@@ -832,7 +836,7 @@ export function AdminSettings() {
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input 
                         type="checkbox" 
-                        checked={notificationActions.bookingCreated.email}
+                        checked={notificationActions?.bookingCreated?.email || false}
                         onChange={(e) => setNotificationActions({
                           ...notificationActions,
                           bookingCreated: { ...notificationActions.bookingCreated, email: e.target.checked }
@@ -845,7 +849,7 @@ export function AdminSettings() {
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input 
                         type="checkbox" 
-                        checked={notificationActions.bookingCreated.whatsapp}
+                        checked={notificationActions?.bookingCreated?.whatsapp || false}
                         onChange={(e) => setNotificationActions({
                           ...notificationActions,
                           bookingCreated: { ...notificationActions.bookingCreated, whatsapp: e.target.checked }
@@ -869,7 +873,7 @@ export function AdminSettings() {
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input 
                         type="checkbox" 
-                        checked={notificationActions.bookingConfirmed.email}
+                        checked={notificationActions?.bookingConfirmed?.email || false}
                         onChange={(e) => setNotificationActions({
                           ...notificationActions,
                           bookingConfirmed: { ...notificationActions.bookingConfirmed, email: e.target.checked }
@@ -882,7 +886,7 @@ export function AdminSettings() {
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input 
                         type="checkbox" 
-                        checked={notificationActions.bookingConfirmed.whatsapp}
+                        checked={notificationActions?.bookingConfirmed?.whatsapp || false}
                         onChange={(e) => setNotificationActions({
                           ...notificationActions,
                           bookingConfirmed: { ...notificationActions.bookingConfirmed, whatsapp: e.target.checked }
