@@ -201,10 +201,15 @@ export function AdminBookings() {
       setSelectedBookingForPayment(null);
       setPaymentFormData({ amount: '', paymentMethod: 'MPesa' });
       
-      // Reload data
+      // 🎯 Wait a moment for database to commit, then reload data
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      // Reload data to show updated booking status
       const updatedPayments = await getPayments();
       setPayments(updatedPayments);
       await loadBookings();
+      
+      toast.success('Booking status updated!', { duration: 2000 });
     } catch (error) {
       toast.error('Failed to process payment');
     }
