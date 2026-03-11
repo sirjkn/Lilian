@@ -320,6 +320,11 @@ export function AdminPayments() {
                   placeholder="0.00"
                   value={formData.amount}
                   onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                    }
+                  }}
                   required
                 />
                 {selectedBooking && (
@@ -343,6 +348,7 @@ export function AdminPayments() {
               </div>
               <div className="flex gap-4 pt-4">
                 <Button 
+                  type="button"
                   onClick={async () => {
                     if (!formData.bookingId || !formData.customerId || !formData.amount) {
                       toast.error('Please fill in all fields');
