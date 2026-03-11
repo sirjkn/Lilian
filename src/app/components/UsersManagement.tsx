@@ -33,7 +33,11 @@ export function UsersManagement() {
   const loadUsers = async () => {
     try {
       const fetchedUsers = await getUsers();
-      setUsers(fetchedUsers);
+      // Additional filtering to ensure only valid users are displayed
+      const validUsers = fetchedUsers.filter(user => 
+        user && user.id && user.email && user.name
+      );
+      setUsers(validUsers);
     } catch (error) {
       console.error('Failed to load users', error);
       toast.error('Failed to load users');
@@ -107,6 +111,12 @@ export function UsersManagement() {
   };
 
   const openEditDialog = (user: User) => {
+    // Validate user has required fields
+    if (!user || !user.id || !user.email || !user.name) {
+      toast.error('Invalid user data');
+      return;
+    }
+    
     setSelectedUser(user);
     setEditUserName(user.name);
     setEditUserEmail(user.email);
