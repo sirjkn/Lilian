@@ -60,16 +60,27 @@ export function PropertyDetails() {
         } else {
           setProperty(data);
           
-          // Check current booking status
+          // Check current booking status - only show as booked if confirmed AND fully paid
           const bookings = await getPropertyBookings(id);
+          const payments = await getPayments();
           const now = new Date();
-          const activeBooking = bookings.find(booking => {
+          
+          // Find active confirmed bookings (checkout date hasn't passed yet)
+          const activeBookings = bookings.filter(booking => {
             const checkOut = new Date(booking.checkOut);
-            return checkOut > now && (booking.status === 'confirmed' || booking.status === 'pending');
+            return checkOut > now && booking.status === 'confirmed';
           });
           
-          if (activeBooking) {
-            setCurrentBooking(activeBooking);
+          // Check if any active booking is fully paid
+          for (const booking of activeBookings) {
+            const bookingPayments = payments.filter(p => p.bookingId === booking.id && p.status === 'paid');
+            const totalPaid = bookingPayments.reduce((sum, p) => sum + p.amount, 0);
+            
+            // If booking is confirmed and fully paid, property is booked
+            if (totalPaid >= booking.totalPrice) {
+              setCurrentBooking(booking);
+              break;
+            }
           }
         }
       } catch (err) {

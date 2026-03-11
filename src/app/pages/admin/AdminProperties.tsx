@@ -59,10 +59,17 @@ export function AdminProperties() {
       return checkOut > now;
     });
     
+    console.log(`🔍 AdminProperties - Property ${propertyId}:`, {
+      totalBookings: propertyBookings.length,
+      activeBookings: activeBookings.length,
+      totalPayments: payments.length
+    });
+    
     // Check if any active booking is confirmed AND paid in full
     for (const booking of activeBookings) {
       // Only consider "confirmed" bookings (not "pending")
       if (booking.status !== 'confirmed') {
+        console.log(`⏭️ Skipping booking ${booking.id} - status: ${booking.status}`);
         continue;
       }
       
@@ -70,9 +77,18 @@ export function AdminProperties() {
       const bookingPayments = payments.filter(p => p.bookingId === booking.id && p.status === 'paid');
       const totalPaid = bookingPayments.reduce((sum, p) => sum + p.amount, 0);
       
+      console.log(`💰 Confirmed Booking ${booking.id}:`, {
+        status: booking.status,
+        totalPrice: booking.totalPrice,
+        totalPaid,
+        isFullyPaid: totalPaid >= booking.totalPrice,
+        checkOut: booking.checkOut
+      });
+      
       // If booking is confirmed and fully paid, property is booked
       if (totalPaid >= booking.totalPrice) {
         const checkOutDate = new Date(booking.checkOut).toLocaleDateString();
+        console.log(`✅ Property BOOKED - Available from ${checkOutDate}`);
         return { 
           available: false, 
           label: `Booked, Available from ${checkOutDate}` 
@@ -84,6 +100,7 @@ export function AdminProperties() {
     // - No active bookings
     // - OR all active bookings are pending
     // - OR active bookings are not fully paid
+    console.log(`✅ Property AVAILABLE`);
     return { available: true, label: 'Available' };
   };
 

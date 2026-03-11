@@ -19,26 +19,43 @@ export function PropertyCard({ property }: PropertyCardProps) {
         const payments = await getPayments();
         const now = new Date();
         
+        console.log(`🔍 PropertyCard [${property.title}]:`, {
+          totalBookings: bookings.length,
+          totalPayments: payments.length,
+          propertyId: property.id
+        });
+        
         // Find active confirmed bookings (checkout date hasn't passed yet)
         const activeBookings = bookings.filter(booking => {
           const checkOut = new Date(booking.checkOut);
           return checkOut > now && booking.status === 'confirmed';
         });
         
+        console.log(`📅 Active confirmed bookings:`, activeBookings);
+        
         // Check if any active booking is fully paid
         for (const booking of activeBookings) {
           const bookingPayments = payments.filter(p => p.bookingId === booking.id && p.status === 'paid');
           const totalPaid = bookingPayments.reduce((sum, p) => sum + p.amount, 0);
           
+          console.log(`💰 Booking ${booking.id}:`, {
+            totalPrice: booking.totalPrice,
+            totalPaid,
+            isFullyPaid: totalPaid >= booking.totalPrice,
+            payments: bookingPayments
+          });
+          
           // If booking is confirmed and fully paid, property is booked
           if (totalPaid >= booking.totalPrice) {
             const checkOutDate = new Date(booking.checkOut).toLocaleDateString();
+            console.log(`✅ Property BOOKED until ${checkOutDate}`);
             setBookedUntil(checkOutDate);
             return;
           }
         }
         
         // No fully paid confirmed bookings
+        console.log(`✅ Property AVAILABLE`);
         setBookedUntil(null);
       } catch (error) {
         console.error('Failed to check booking status:', error);
