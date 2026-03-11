@@ -143,58 +143,60 @@ export function AdminCustomers() {
               </thead>
               <tbody>
                 {customers.map((customer) => (
-                  <tr key={customer.id} className="border-b hover:bg-gray-50 text-sm">
-                    <td className="py-2 px-3">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                          <span className="text-xs font-semibold text-blue-600">
-                            {customer.name.charAt(0).toUpperCase()}
-                          </span>
+                  customer && customer.id && customer.email ? (
+                    <tr key={customer.id} className="border-b hover:bg-gray-50 text-sm">
+                      <td className="py-2 px-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                            <span className="text-xs font-semibold text-blue-600">
+                              {customer.name ? customer.name.charAt(0).toUpperCase() : 'U'}
+                            </span>
+                          </div>
+                          <div className="font-medium">{customer.name || 'N/A'}</div>
                         </div>
-                        <div className="font-medium">{customer.name}</div>
-                      </div>
-                    </td>
-                    <td className="py-2 px-3">
-                      <div className="flex items-center gap-1.5 text-gray-600">
-                        <Mail className="h-3.5 w-3.5 text-gray-400" />
-                        {customer.email}
-                      </div>
-                    </td>
-                    <td className="py-2 px-3">
-                      <div className="flex items-center gap-1.5 text-gray-600">
-                        <Phone className="h-3.5 w-3.5 text-gray-400" />
-                        {customer.phone}
-                      </div>
-                    </td>
-                    <td className="py-2 px-3">
-                      <div className="flex gap-1">
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-7 w-7" 
-                          onClick={() => {
-                            setEditingCustomer(customer);
-                            setFormData({ name: customer.name, email: customer.email, phone: customer.phone, password: '' });
-                            setShowEditDialog(true);
-                          }}
-                        >
-                          <Pencil className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-7 w-7" 
-                          onClick={() => {
-                            if (confirm('Are you sure you want to delete this customer?')) {
-                              handleDelete(customer.id);
-                            }
-                          }}
-                        >
-                          <Trash2 className="h-3.5 w-3.5 text-red-600" />
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
+                      </td>
+                      <td className="py-2 px-3">
+                        <div className="flex items-center gap-1.5 text-gray-600">
+                          <Mail className="h-3.5 w-3.5 text-gray-400" />
+                          {customer.email}
+                        </div>
+                      </td>
+                      <td className="py-2 px-3">
+                        <div className="flex items-center gap-1.5 text-gray-600">
+                          <Phone className="h-3.5 w-3.5 text-gray-400" />
+                          {customer.phone || 'N/A'}
+                        </div>
+                      </td>
+                      <td className="py-2 px-3">
+                        <div className="flex gap-1">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-7 w-7" 
+                            onClick={() => {
+                              setEditingCustomer(customer);
+                              setFormData({ name: customer.name || '', email: customer.email || '', phone: customer.phone || '', password: '' });
+                              setShowEditDialog(true);
+                            }}
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-7 w-7" 
+                            onClick={() => {
+                              if (confirm('Are you sure you want to delete this customer?')) {
+                                handleDelete(customer.id);
+                              }
+                            }}
+                          >
+                            <Trash2 className="h-3.5 w-3.5 text-red-600" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : null
                 ))}
               </tbody>
             </table>

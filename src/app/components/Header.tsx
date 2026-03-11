@@ -58,7 +58,7 @@ export function Header() {
             <div className="hidden md:flex items-center gap-4">
               {user ? (
                 <>
-                  <span className="text-sm text-white">Hello, {user.name}</span>
+                  <span className="text-sm text-white">Hello, {user?.name || 'User'}</span>
                   {!isAdmin && (
                     <Link to="/profile">
                       <Button variant="outline" size="sm" className="bg-transparent text-white border-white hover:bg-white hover:text-[#3a3a3a]">
@@ -152,7 +152,7 @@ export function Header() {
             <div className="space-y-3">
               <div className="px-4 py-2 text-white">
                 <p className="text-xs text-white/70">Logged in as</p>
-                <p className="font-semibold">{user.name}</p>
+                <p className="font-semibold">{user?.name || 'User'}</p>
               </div>
               {!isAdmin && (
                 <Link to="/profile" onClick={() => setMobileMenuOpen(false)}>

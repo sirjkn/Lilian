@@ -174,9 +174,9 @@ export function AdminBookings() {
         if (customer && property) {
           // Send customer confirmation
           await sendCustomerBookingConfirmation({
-            customerName: customer.name,
-            customerPhone: customer.phone,
-            customerEmail: customer.email,
+            customerName: customer?.name || 'Customer',
+            customerPhone: customer?.phone || '',
+            customerEmail: customer?.email || '',
             checkInDate: selectedBookingForPayment.checkIn,
             checkOutDate: selectedBookingForPayment.checkOut,
             propertyName: property.title,
@@ -185,7 +185,7 @@ export function AdminBookings() {
           
           // Send admin notification
           await sendAdminBookingNotification({
-            customerName: customer.name,
+            customerName: customer?.name || 'Customer',
             checkInDate: selectedBookingForPayment.checkIn,
             checkOutDate: selectedBookingForPayment.checkOut,
             propertyName: property.title,
@@ -282,8 +282,22 @@ export function AdminBookings() {
       const property = properties.find(p => p.id === newBooking.propertyId);
       const customer = customers.find(c => c.id === newBooking.customerId);
       if (property && customer) {
-        sendCustomerBookingConfirmation(customer.email, property.title, newBooking.checkIn, newBooking.checkOut, newBooking.totalPrice);
-        sendAdminBookingNotification(property.title, customer.name, newBooking.checkIn, newBooking.checkOut, newBooking.totalPrice);
+        sendCustomerBookingConfirmation({
+          customerName: customer?.name || 'Customer',
+          customerPhone: customer?.phone || '',
+          customerEmail: customer?.email || '',
+          checkInDate: newBooking.checkIn,
+          checkOutDate: newBooking.checkOut,
+          propertyName: property.title,
+          totalPrice: newBooking.totalPrice,
+        });
+        sendAdminBookingNotification({
+          customerName: customer?.name || 'Customer',
+          checkInDate: newBooking.checkIn,
+          checkOutDate: newBooking.checkOut,
+          propertyName: property.title,
+          totalPrice: newBooking.totalPrice,
+        });
       }
     } catch (error) {
       console.error('Failed to create booking:', error);
