@@ -496,7 +496,11 @@ export async function deleteBooking(id: string): Promise<void> {
 export async function getCustomers(): Promise<Customer[]> {
   try {
     const result = await fetchWithAuth(`${API_BASE_URL}?endpoint=customers`);
-    return result || [];
+    // Filter out any invalid customer objects that don't have required fields
+    if (Array.isArray(result)) {
+      return result.filter(customer => customer && customer.id && customer.email && customer.name);
+    }
+    return [];
   } catch (error) {
     if (error instanceof Error && (error.message === 'PREVIEW_MODE' || error.message === 'API_NOT_DEPLOYED')) {
       return [];
@@ -786,7 +790,11 @@ export function generateICalUrl(propertyId: string): string {
 export async function getUsers(): Promise<User[]> {
   try {
     const result = await fetchWithAuth(`${API_BASE_URL}?endpoint=users`);
-    return result || [];
+    // Filter out any invalid user objects that don't have required fields
+    if (Array.isArray(result)) {
+      return result.filter(user => user && user.id && user.email && user.name);
+    }
+    return [];
   } catch (error) {
     if (error instanceof Error && (error.message === 'PREVIEW_MODE' || error.message === 'API_NOT_DEPLOYED')) {
       return [];
