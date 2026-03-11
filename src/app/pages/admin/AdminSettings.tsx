@@ -41,10 +41,19 @@ export function AdminSettings() {
   const [companyAddress, setCompanyAddress] = useState('123 Main St, Suite 100, New York, NY 10001');
 
   // Email Integration State
-  const [emailProvider, setEmailProvider] = useState('sendgrid');
+  const [emailProvider, setEmailProvider] = useState('smtp');
   const [emailApiKey, setEmailApiKey] = useState('');
-  const [emailFromAddress, setEmailFromAddress] = useState('');
+  const [emailFromAddress, setEmailFromAddress] = useState('info@skywaysuites.co.ke');
   const [emailFromName, setEmailFromName] = useState('Skyway Suites');
+  
+  // SMTP Configuration State
+  const [smtpHost, setSmtpHost] = useState('mail.skywaysuites.co.ke');
+  const [smtpPort, setSmtpPort] = useState('465');
+  const [smtpUsername, setSmtpUsername] = useState('info@skywaysuites.co.ke');
+  const [smtpPassword, setSmtpPassword] = useState('^we;RW{8OMGUOazE');
+  const [smtpSecure, setSmtpSecure] = useState(true); // SSL/TLS
+  const [testEmail, setTestEmail] = useState('');
+  const [isSendingTest, setIsSendingTest] = useState(false);
   
   // WhatsApp Integration State
   const [whatsappProvider, setWhatsappProvider] = useState('twilio');
@@ -226,6 +235,13 @@ export function AdminSettings() {
         if (settings.emailFromAddress) setEmailFromAddress(settings.emailFromAddress);
         if (settings.emailFromName) setEmailFromName(settings.emailFromName);
         
+        // Load SMTP configuration settings
+        if (settings.smtpHost) setSmtpHost(settings.smtpHost);
+        if (settings.smtpPort) setSmtpPort(settings.smtpPort);
+        if (settings.smtpUsername) setSmtpUsername(settings.smtpUsername);
+        if (settings.smtpPassword) setSmtpPassword(settings.smtpPassword);
+        if (settings.smtpSecure) setSmtpSecure(settings.smtpSecure);
+        
         // Load WhatsApp integration settings
         if (settings.whatsappProvider) setWhatsappProvider(settings.whatsappProvider);
         if (settings.whatsappAccountSid) setWhatsappAccountSid(settings.whatsappAccountSid);
@@ -254,6 +270,11 @@ export function AdminSettings() {
         emailApiKey,
         emailFromAddress,
         emailFromName,
+        smtpHost,
+        smtpPort,
+        smtpUsername,
+        smtpPassword,
+        smtpSecure,
       });
       toast.success('Email integration saved!');
     } catch (error) {
@@ -284,6 +305,25 @@ export function AdminSettings() {
       toast.success('Notification settings saved!');
     } catch (error) {
       toast.error('Failed to save notification settings');
+    }
+  };
+
+  const handleSendTestEmail = async () => {
+    if (!testEmail) {
+      toast.error('Please enter a test email address');
+      return;
+    }
+
+    setIsSendingTest(true);
+    try {
+      await updateNotificationSettings({
+        testEmail,
+      });
+      toast.success('Test email sent successfully!');
+    } catch (error) {
+      toast.error('Failed to send test email');
+    } finally {
+      setIsSendingTest(false);
     }
   };
 
@@ -640,46 +680,157 @@ export function AdminSettings() {
                     onChange={(e) => setEmailProvider(e.target.value)}
                     className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
                   >
+                    <option value="smtp">Custom SMTP</option>
                     <option value="sendgrid">SendGrid</option>
                     <option value="mailgun">Mailgun</option>
-                    <option value="smtp">Custom SMTP</option>
                   </select>
                 </div>
-                <div>
-                  <label className="block text-sm mb-2 font-medium">API Key</label>
-                  <Input 
-                    type="password"
-                    value={emailApiKey}
-                    onChange={(e) => setEmailApiKey(e.target.value)}
-                    placeholder="Your API Key"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm mb-2 font-medium">From Email Address</label>
-                  <Input 
-                    type="email"
-                    value={emailFromAddress}
-                    onChange={(e) => setEmailFromAddress(e.target.value)}
-                    placeholder="noreply@skywaysuites.com"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm mb-2 font-medium">From Name</label>
-                  <Input 
-                    value={emailFromName}
-                    onChange={(e) => setEmailFromName(e.target.value)}
-                    placeholder="Skyway Suites"
-                  />
-                </div>
-                <div className="p-3 bg-blue-50 rounded-md text-xs">
-                  <p className="mb-1.5"><strong>Setup Instructions:</strong></p>
-                  <ol className="list-decimal list-inside space-y-0.5 text-gray-700">
-                    <li>Create an account with your chosen email provider</li>
-                    <li>Generate an API key from their dashboard</li>
-                    <li>Paste your API key above</li>
-                    <li>Configure your sending domain and verify it</li>
-                  </ol>
-                </div>
+
+                {emailProvider === 'smtp' ? (
+                  <>
+                    <div className="p-3 bg-green-50 rounded-md border border-green-200 text-xs">
+                      <p className="font-semibold text-green-800 mb-1">✓ SMTP Configured</p>
+                      <p className="text-green-700">Your custom SMTP server is ready to send emails</p>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm mb-2 font-medium">From Name</label>
+                      <Input 
+                        value={emailFromName}
+                        onChange={(e) => setEmailFromName(e.target.value)}
+                        placeholder="Skyway Suites"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm mb-2 font-medium">From Email Address</label>
+                      <Input 
+                        type="email"
+                        value={emailFromAddress}
+                        onChange={(e) => setEmailFromAddress(e.target.value)}
+                        placeholder="info@skywaysuites.co.ke"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm mb-2 font-medium">SMTP Host</label>
+                      <Input 
+                        value={smtpHost}
+                        onChange={(e) => setSmtpHost(e.target.value)}
+                        placeholder="mail.skywaysuites.co.ke"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-sm mb-2 font-medium">SMTP Port</label>
+                        <Input 
+                          type="number"
+                          value={smtpPort}
+                          onChange={(e) => setSmtpPort(e.target.value)}
+                          placeholder="465"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm mb-2 font-medium">Security</label>
+                        <select
+                          value={smtpSecure ? 'true' : 'false'}
+                          onChange={(e) => setSmtpSecure(e.target.value === 'true')}
+                          className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+                        >
+                          <option value="true">SSL/TLS (465)</option>
+                          <option value="false">STARTTLS (587)</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm mb-2 font-medium">SMTP Username</label>
+                      <Input 
+                        value={smtpUsername}
+                        onChange={(e) => setSmtpUsername(e.target.value)}
+                        placeholder="info@skywaysuites.co.ke"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm mb-2 font-medium">SMTP Password</label>
+                      <Input 
+                        type="password"
+                        value={smtpPassword}
+                        onChange={(e) => setSmtpPassword(e.target.value)}
+                        placeholder="Your email password"
+                      />
+                    </div>
+
+                    <div className="p-3 bg-blue-50 rounded-md text-xs">
+                      <p className="mb-1.5"><strong>SMTP Configuration:</strong></p>
+                      <ul className="list-disc list-inside space-y-0.5 text-gray-700">
+                        <li>Server: {smtpHost || 'mail.skywaysuites.co.ke'}</li>
+                        <li>Port: {smtpPort || '465'} ({smtpSecure ? 'SSL/TLS' : 'STARTTLS'})</li>
+                        <li>Username: {smtpUsername || 'info@skywaysuites.co.ke'}</li>
+                        <li>From: {emailFromName || 'Skyway Suites'} &lt;{emailFromAddress || 'info@skywaysuites.co.ke'}&gt;</li>
+                      </ul>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="email"
+                        value={testEmail}
+                        onChange={(e) => setTestEmail(e.target.value)}
+                        placeholder="Enter test email address"
+                        className="w-full"
+                      />
+                      <Button
+                        onClick={handleSendTestEmail}
+                        size="sm"
+                        disabled={isSendingTest}
+                      >
+                        <Mail className="h-3.5 w-3.5 mr-2" />
+                        {isSendingTest ? 'Sending...' : 'Send Test Email'}
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <label className="block text-sm mb-2 font-medium">API Key</label>
+                      <Input 
+                        type="password"
+                        value={emailApiKey}
+                        onChange={(e) => setEmailApiKey(e.target.value)}
+                        placeholder="Your API Key"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm mb-2 font-medium">From Email Address</label>
+                      <Input 
+                        type="email"
+                        value={emailFromAddress}
+                        onChange={(e) => setEmailFromAddress(e.target.value)}
+                        placeholder="noreply@skywaysuites.com"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm mb-2 font-medium">From Name</label>
+                      <Input 
+                        value={emailFromName}
+                        onChange={(e) => setEmailFromName(e.target.value)}
+                        placeholder="Skyway Suites"
+                      />
+                    </div>
+                    <div className="p-3 bg-blue-50 rounded-md text-xs">
+                      <p className="mb-1.5"><strong>Setup Instructions:</strong></p>
+                      <ol className="list-decimal list-inside space-y-0.5 text-gray-700">
+                        <li>Create an account with your chosen email provider</li>
+                        <li>Generate an API key from their dashboard</li>
+                        <li>Paste your API key above</li>
+                        <li>Configure your sending domain and verify it</li>
+                      </ol>
+                    </div>
+                  </>
+                )}
+
                 <Button onClick={handleSaveEmailSettings}>
                   <Mail className="h-4 w-4 mr-2" />
                   Save Email Settings

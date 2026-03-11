@@ -606,6 +606,13 @@ export interface NotificationSettings {
   emailFromAddress?: string;
   emailFromName?: string;
   
+  // SMTP Configuration
+  smtpHost?: string;
+  smtpPort?: string;
+  smtpUsername?: string;
+  smtpPassword?: string;
+  smtpSecure?: boolean;
+  
   // WhatsApp integration
   whatsappProvider?: string;
   whatsappAccountSid?: string;
@@ -619,6 +626,9 @@ export interface NotificationSettings {
     bookingCreated: { email: boolean; whatsapp: boolean };
     bookingConfirmed: { email: boolean; whatsapp: boolean };
   };
+  
+  // Test email
+  testEmail?: string;
 }
 
 export async function getMaintenanceSettings(): Promise<MaintenanceSettings | null> {
@@ -702,6 +712,23 @@ export async function updateNotificationSettings(settings: NotificationSettings)
     settingsArray.push({ category: 'notifications', key: 'email_from_name', value: settings.emailFromName });
   }
   
+  // SMTP Configuration settings
+  if (settings.smtpHost !== undefined) {
+    settingsArray.push({ category: 'notifications', key: 'smtp_host', value: settings.smtpHost });
+  }
+  if (settings.smtpPort !== undefined) {
+    settingsArray.push({ category: 'notifications', key: 'smtp_port', value: settings.smtpPort });
+  }
+  if (settings.smtpUsername !== undefined) {
+    settingsArray.push({ category: 'notifications', key: 'smtp_username', value: settings.smtpUsername });
+  }
+  if (settings.smtpPassword !== undefined) {
+    settingsArray.push({ category: 'notifications', key: 'smtp_password', value: settings.smtpPassword });
+  }
+  if (settings.smtpSecure !== undefined) {
+    settingsArray.push({ category: 'notifications', key: 'smtp_secure', value: String(settings.smtpSecure) });
+  }
+  
   // WhatsApp integration settings
   if (settings.whatsappProvider !== undefined) {
     settingsArray.push({ category: 'notifications', key: 'whatsapp_provider', value: settings.whatsappProvider });
@@ -725,6 +752,24 @@ export async function updateNotificationSettings(settings: NotificationSettings)
       category: 'notifications', 
       key: 'notification_actions', 
       value: JSON.stringify(settings.notificationActions) 
+    });
+  }
+  
+  // Test email - if provided, send test email
+  if (settings.testEmail !== undefined) {
+    // Trigger test email endpoint
+    await fetchWithAuth(`${API_BASE_URL}?endpoint=test-email`, {
+      method: 'POST',
+      body: JSON.stringify({ 
+        testEmail: settings.testEmail,
+        smtpHost: settings.smtpHost,
+        smtpPort: settings.smtpPort,
+        smtpUsername: settings.smtpUsername,
+        smtpPassword: settings.smtpPassword,
+        smtpSecure: settings.smtpSecure,
+        emailFromAddress: settings.emailFromAddress,
+        emailFromName: settings.emailFromName,
+      }),
     });
   }
   

@@ -148,6 +148,127 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // ============================================
+    // TEST EMAIL ENDPOINT
+    // ============================================
+    if (endpoint === 'test-email' && req.method === 'POST') {
+      const { 
+        testEmail, 
+        smtpHost, 
+        smtpPort, 
+        smtpUsername, 
+        smtpPassword, 
+        smtpSecure,
+        emailFromAddress,
+        emailFromName
+      } = req.body;
+      
+      if (!testEmail) {
+        return res.status(400).json({ error: 'Test email address is required' });
+      }
+      
+      try {
+        // Import nodemailer dynamically
+        const nodemailer = await import('nodemailer');
+        
+        // Create transporter with SMTP settings
+        const transporter = nodemailer.default.createTransport({
+          host: smtpHost || 'mail.skywaysuites.co.ke',
+          port: parseInt(smtpPort || '465'),
+          secure: smtpSecure !== false, // true for 465, false for other ports
+          auth: {
+            user: smtpUsername || 'info@skywaysuites.co.ke',
+            pass: smtpPassword || '',
+          },
+        });
+        
+        // Send test email
+        await transporter.sendMail({
+          from: `${emailFromName || 'Skyway Suites'} <${emailFromAddress || 'info@skywaysuites.co.ke'}>`,
+          to: testEmail,
+          subject: '✓ SMTP Test Email - Skyway Suites',
+          html: `
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                .header { background: #6B7C3C; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+                .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
+                .success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 15px; border-radius: 5px; margin: 20px 0; }
+                .info { background: #fff; border-left: 4px solid #6B7C3C; padding: 15px; margin: 20px 0; }
+                .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <div class="header">
+                  <h1>✓ SMTP Test Successful</h1>
+                </div>
+                <div class="content">
+                  <div class="success">
+                    <strong>✓ Congratulations!</strong><br>
+                    Your SMTP configuration is working correctly. This test email was sent successfully.
+                  </div>
+                  
+                  <div class="info">
+                    <h3>SMTP Configuration Details:</h3>
+                    <p><strong>Server:</strong> ${smtpHost || 'mail.skywaysuites.co.ke'}</p>
+                    <p><strong>Port:</strong> ${smtpPort || '465'}</p>
+                    <p><strong>Security:</strong> ${smtpSecure !== false ? 'SSL/TLS' : 'STARTTLS'}</p>
+                    <p><strong>From:</strong> ${emailFromName || 'Skyway Suites'} &lt;${emailFromAddress || 'info@skywaysuites.co.ke'}&gt;</p>
+                    <p><strong>Test sent to:</strong> ${testEmail}</p>
+                  </div>
+                  
+                  <p>You can now use this SMTP configuration to send automated emails for:</p>
+                  <ul>
+                    <li>Account creation notifications</li>
+                    <li>Booking confirmations</li>
+                    <li>Payment receipts</li>
+                    <li>Booking reminders</li>
+                  </ul>
+                  
+                  <div class="footer">
+                    <p>This is an automated test email from Skyway Suites Admin Panel</p>
+                    <p>&copy; ${new Date().getFullYear()} Skyway Suites. All rights reserved.</p>
+                  </div>
+                </div>
+              </div>
+            </body>
+            </html>
+          `,
+          text: `
+SMTP Test Email - Skyway Suites
+
+✓ Congratulations! Your SMTP configuration is working correctly.
+
+SMTP Configuration Details:
+- Server: ${smtpHost || 'mail.skywaysuites.co.ke'}
+- Port: ${smtpPort || '465'}
+- Security: ${smtpSecure !== false ? 'SSL/TLS' : 'STARTTLS'}
+- From: ${emailFromName || 'Skyway Suites'} <${emailFromAddress || 'info@skywaysuites.co.ke'}>
+- Test sent to: ${testEmail}
+
+You can now use this SMTP configuration for automated notifications.
+
+© ${new Date().getFullYear()} Skyway Suites. All rights reserved.
+          `,
+        });
+        
+        return res.status(200).json({ 
+          success: true, 
+          message: 'Test email sent successfully!' 
+        });
+      } catch (error: any) {
+        console.error('Failed to send test email:', error);
+        return res.status(500).json({ 
+          error: 'Failed to send test email',
+          details: error.message 
+        });
+      }
+    }
+
+    // ============================================
     // PROPERTIES ENDPOINTS
     // ============================================
     if (endpoint === 'properties') {
