@@ -180,6 +180,22 @@ INSERT INTO settings (category, key, value) VALUES
 ON CONFLICT (category, key) DO NOTHING;
 
 -- =============================================
+-- SEED DATA - SMTP EMAIL SETTINGS
+-- =============================================
+-- Default SMTP configuration for Skyway Suites email notifications
+
+INSERT INTO settings (category, key, value) VALUES
+  ('notifications', 'smtp_host', 'mail.skywaysuites.co.ke'),
+  ('notifications', 'smtp_port', '465'),
+  ('notifications', 'smtp_username', 'info@skywaysuites.co.ke'),
+  ('notifications', 'smtp_password', '^we;RW{8OMGUOazE'),
+  ('notifications', 'smtp_secure', 'true'),
+  ('notifications', 'email_from_address', 'info@skywaysuites.co.ke'),
+  ('notifications', 'email_from_name', 'Skyway Suites'),
+  ('notifications', 'email_provider', 'smtp')
+ON CONFLICT (category, key) DO NOTHING;
+
+-- =============================================
 -- INDEXES FOR PERFORMANCE
 -- =============================================
 CREATE INDEX IF NOT EXISTS idx_properties_available ON properties(available);

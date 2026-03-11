@@ -156,7 +156,15 @@ INSERT INTO settings (category, key, value) VALUES
 ('cloudinary', 'api_secret', '-TZoR9QSDk1lMfEOdQc-Tv59f9A'),
 ('maintenance', 'enabled', 'false'),
 ('maintenance', 'message', 'We''re currently performing scheduled maintenance to improve your experience.'),
-('maintenance', 'estimated_time', 'We''ll be back soon')
+('maintenance', 'estimated_time', 'We''ll be back soon'),
+('notifications', 'smtp_host', 'mail.skywaysuites.co.ke'),
+('notifications', 'smtp_port', '465'),
+('notifications', 'smtp_username', 'info@skywaysuites.co.ke'),
+('notifications', 'smtp_password', '^we;RW{8OMGUOazE'),
+('notifications', 'smtp_secure', 'true'),
+('notifications', 'email_from_address', 'info@skywaysuites.co.ke'),
+('notifications', 'email_from_name', 'Skyway Suites'),
+('notifications', 'email_provider', 'smtp')
 ON CONFLICT (category, key) DO NOTHING;
 
 -- Verify tables were created

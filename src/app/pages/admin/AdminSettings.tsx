@@ -1,12 +1,3 @@
-import { useState, useEffect } from 'react';
-import { Save, Bell, Users as UsersIcon, Settings as SettingsIcon, Image, Mail, MessageCircle, CheckCircle, Upload, X, Wrench, Edit, Trash2 } from 'lucide-react';
-import { Button } from '../../components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
-import { Input } from '../../components/ui/input';
-import * as Tabs from '@radix-ui/react-tabs';
-import * as Select from '@radix-ui/react-select';
-import * as Switch from '@radix-ui/react-switch';
-import * as Dialog from '@radix-ui/react-dialog';
 import { toast } from 'sonner';
 import { 
   getHeroSettings, 
@@ -16,7 +7,8 @@ import {
   getCompanyInfo, 
   updateCompanyInfo,
   getNotificationSettings,
-  updateNotificationSettings
+  updateNotificationSettings,
+  API_BASE_URL
 } from '../../lib/api';
 import { compressImageToWebP } from '../../lib/imageUtils';
 import { uploadToCloudinary, getCloudinaryConfig, saveCloudinaryConfig } from '../../lib/cloudinaryUpload';
@@ -240,7 +232,10 @@ export function AdminSettings() {
         if (settings.smtpPort) setSmtpPort(settings.smtpPort);
         if (settings.smtpUsername) setSmtpUsername(settings.smtpUsername);
         if (settings.smtpPassword) setSmtpPassword(settings.smtpPassword);
-        if (settings.smtpSecure) setSmtpSecure(settings.smtpSecure);
+        if (settings.smtpSecure !== undefined) {
+          // Convert string 'true'/'false' to boolean
+          setSmtpSecure(settings.smtpSecure === 'true' || settings.smtpSecure === true);
+        }
         
         // Load WhatsApp integration settings
         if (settings.whatsappProvider) setWhatsappProvider(settings.whatsappProvider);
@@ -276,9 +271,59 @@ export function AdminSettings() {
         smtpPassword,
         smtpSecure,
       });
-      toast.success('Email integration saved!');
+      toast.success('Email settings saved successfully');
     } catch (error) {
       toast.error('Failed to save email settings');
+    }
+  };
+
+  const handleSendTestEmail = async () => {
+    if (!testEmail) {
+      toast.error('Please enter a test email address');
+      return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(testEmail)) {
+      toast.error('Please enter a valid email address');
+      return;
+    }
+
+    setIsSendingTest(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}?endpoint=test-email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify({
+          testEmail,
+          smtpHost,
+          smtpPort,
+          smtpUsername,
+          smtpPassword,
+          smtpSecure,
+          emailFromAddress,
+          emailFromName,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast.success(`Test email sent successfully to ${testEmail}!`);
+        setTestEmail(''); // Clear the input after successful send
+      } else {
+        toast.error(data.details || data.error || 'Failed to send test email');
+        console.error('Test email error:', data);
+      }
+    } catch (error) {
+      console.error('Failed to send test email:', error);
+      toast.error('Failed to send test email. Please check your SMTP settings.');
+    } finally {
+      setIsSendingTest(false);
     }
   };
 
@@ -305,25 +350,6 @@ export function AdminSettings() {
       toast.success('Notification settings saved!');
     } catch (error) {
       toast.error('Failed to save notification settings');
-    }
-  };
-
-  const handleSendTestEmail = async () => {
-    if (!testEmail) {
-      toast.error('Please enter a test email address');
-      return;
-    }
-
-    setIsSendingTest(true);
-    try {
-      await updateNotificationSettings({
-        testEmail,
-      });
-      toast.success('Test email sent successfully!');
-    } catch (error) {
-      toast.error('Failed to send test email');
-    } finally {
-      setIsSendingTest(false);
     }
   };
 

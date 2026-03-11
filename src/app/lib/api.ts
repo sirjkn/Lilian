@@ -1,6 +1,6 @@
 // API functions to connect to your Neon database
 // Backend API URL - automatically uses Vercel's API routes in production
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+export const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 // Generate URL-friendly slug from property title and ID
 export function generatePropertySlug(title: string, id: string): string {
