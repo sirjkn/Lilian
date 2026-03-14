@@ -18,6 +18,7 @@ import { AdminPayments } from "./pages/admin/AdminPayments";
 import { AdminSettings } from "./pages/admin/AdminSettings";
 import EmailDiagnostics from "./pages/admin/EmailDiagnostics";
 import DebugSettings from "./pages/admin/DebugSettings";
+import EmailTemplates from "./pages/admin/EmailTemplates";
 import { MaintenanceWrapper } from "./components/MaintenanceWrapper";
 import { RealtimeIndicator } from "./components/RealtimeIndicator";
 import { DatabaseStatus } from "./components/DatabaseStatus";
@@ -65,6 +66,7 @@ export const router = createBrowserRouter([
           { path: "settings", Component: AdminSettings },
           { path: "email-diagnostics", Component: EmailDiagnostics },
           { path: "debug-settings", Component: DebugSettings },
+          { path: "email-templates", Component: EmailTemplates },
         ],
       },
       {

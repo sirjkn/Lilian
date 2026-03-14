@@ -2,6 +2,31 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { query } from './config/db.js';
 import { hashPassword, verifyPassword, generateToken } from './utils/auth.js';
 
+// Helper to get email template from database or use default
+async function getEmailTemplate(templateId: string, defaultSubject: string, defaultHtml: string) {
+  try {
+    const result = await query('SELECT subject, html_template FROM email_templates WHERE id = $1', [templateId]);
+    if (result.rows.length > 0) {
+      return {
+        subject: result.rows[0].subject,
+        html: result.rows[0].html_template
+      };
+    }
+  } catch (error) {
+    console.log(`Template ${templateId} not found in database, using default`);
+  }
+  return { subject: defaultSubject, html: defaultHtml };
+}
+
+// Helper to replace template variables
+function replaceTemplateVars(template: string, vars: Record<string, string>) {
+  let result = template;
+  Object.entries(vars).forEach(([key, value]) => {
+    result = result.replace(new RegExp(`{{${key}}}`, 'g'), value || 'N/A');
+  });
+  return result;
+}
+
 // Helper to transform database row to API format for properties
 function transformProperty(row: any) {
   return {
@@ -1295,6 +1320,64 @@ You can now use this SMTP configuration for automated notifications.
         }
         
         return res.status(200).json(transformedPayment);
+      }
+    }
+
+    // ============================================
+    // INITIALIZE EMAIL TEMPLATES TABLE
+    // ============================================
+    if (endpoint === 'init-email-templates' && req.method === 'POST') {
+      try {
+        await query(`
+          CREATE TABLE IF NOT EXISTS email_templates (
+            id TEXT PRIMARY KEY,
+            subject TEXT NOT NULL,
+            html_template TEXT NOT NULL,
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+            updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+          )
+        `);
+        
+        await query(`CREATE INDEX IF NOT EXISTS idx_email_templates_id ON email_templates(id)`);
+        
+        return res.status(200).json({ 
+          success: true, 
+          message: 'Email templates table created successfully!' 
+        });
+      } catch (error) {
+        console.error('Failed to create email_templates table:', error);
+        return res.status(500).json({ 
+          error: 'Failed to create table',
+          details: error instanceof Error ? error.message : String(error)
+        });
+      }
+    }
+
+    // ============================================
+    // EMAIL TEMPLATES ENDPOINTS
+    // ============================================
+    if (endpoint === 'email-templates') {
+      if (req.method === 'GET') {
+        const result = await query("SELECT * FROM email_templates ORDER BY id");
+        return res.status(200).json(result.rows);
+      }
+      
+      if (req.method === 'PUT') {
+        const { id, subject, htmlTemplate } = req.body;
+        if (!id || !subject || !htmlTemplate) {
+          return res.status(400).json({ error: 'ID, subject, and htmlTemplate are required' });
+        }
+        
+        // Upsert the template
+        const result = await query(`
+          INSERT INTO email_templates (id, subject, html_template)
+          VALUES ($1, $2, $3)
+          ON CONFLICT (id) 
+          DO UPDATE SET subject = $2, html_template = $3, updated_at = NOW()
+          RETURNING *
+        `, [id, subject, htmlTemplate]);
+        
+        return res.status(200).json(result.rows[0]);
       }
     }
 

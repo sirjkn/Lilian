@@ -65,6 +65,29 @@ export default function DebugSettings() {
     }
   };
 
+  const createEmailTemplatesTable = async () => {
+    try {
+      setLoading(true);
+      
+      const response = await fetch(`${API_BASE_URL}?endpoint=init-email-templates`, {
+        method: 'POST',
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.details || 'Failed to create table');
+      }
+
+      const result = await response.json();
+      toast.success(result.message);
+    } catch (error) {
+      console.error('Failed to create table:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to create table');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <Card>
@@ -78,6 +101,9 @@ export default function DebugSettings() {
             </Button>
             <Button onClick={initializeRaptorSettings} disabled={loading} variant="default">
               Initialize Raptor Settings Directly
+            </Button>
+            <Button onClick={createEmailTemplatesTable} disabled={loading} variant="default">
+              Create Email Templates Table
             </Button>
           </div>
 
