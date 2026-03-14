@@ -142,6 +142,104 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         );
         const user = result.rows[0];
         
+        // 📧 SEND WELCOME EMAIL
+        try {
+          console.log('📧 Sending welcome email to new user:', email);
+          
+          // Get SMTP settings
+          const settingsResult = await query('SELECT key, value FROM settings WHERE key IN ($1, $2, $3, $4, $5, $6, $7)', [
+            'smtpHost', 'smtpPort', 'smtpUsername', 'smtpPassword', 'smtpSecure', 'emailFromAddress', 'emailFromName'
+          ]);
+          
+          const settings: any = {};
+          settingsResult.rows.forEach((row: any) => {
+            settings[row.key] = row.value;
+          });
+          
+          if (settings.smtpHost && settings.smtpUsername) {
+            const nodemailer = await import('nodemailer');
+            
+            const port = parseInt(settings.smtpPort || '587');
+            const useSSL = settings.smtpSecure === 'true';
+            
+            const transporter = nodemailer.default.createTransport({
+              host: settings.smtpHost || 'raptor.vivawebhost.com',
+              port: port,
+              secure: useSSL,
+              auth: {
+                user: settings.smtpUsername || 'info@skywaysuites.co.ke',
+                pass: settings.smtpPassword || '',
+              },
+              connectionTimeout: 10000,
+              tls: {
+                rejectUnauthorized: false,
+                minVersion: 'TLSv1.2'
+              }
+            });
+            
+            await transporter.sendMail({
+              from: `${settings.emailFromName || 'Skyway Suites'} <${settings.emailFromAddress || 'info@skywaysuites.co.ke'}>`,
+              to: email,
+              subject: '🎉 Welcome to Skyway Suites!',
+              html: `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                  <style>
+                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                    .header { background: #6B7C3C; color: white; padding: 30px 20px; text-align: center; border-radius: 8px 8px 0 0; }
+                    .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
+                    .welcome-box { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #6B7C3C; }
+                    .button { display: inline-block; background: #6B7C3C; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+                    .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }
+                  </style>
+                </head>
+                <body>
+                  <div class="container">
+                    <div class="header">
+                      <h1>🎉 Welcome to Skyway Suites!</h1>
+                      <p>Your account has been created successfully</p>
+                    </div>
+                    <div class="content">
+                      <p>Dear ${name},</p>
+                      <p>Thank you for creating an account with <strong>Skyway Suites</strong>! We're excited to have you join our community.</p>
+                      
+                      <div class="welcome-box">
+                        <h3 style="margin-top: 0; color: #6B7C3C;">Account Details</h3>
+                        <p><strong>Name:</strong> ${name}</p>
+                        <p><strong>Email:</strong> ${email}</p>
+                        <p><strong>Phone:</strong> ${phone}</p>
+                      </div>
+                      
+                      <p>You can now:</p>
+                      <ul>
+                        <li>Browse our exclusive properties</li>
+                        <li>Make bookings instantly</li>
+                        <li>Manage your reservations</li>
+                        <li>Receive special offers and updates</li>
+                      </ul>
+                      
+                      <p>If you have any questions or need assistance, feel free to contact us anytime.</p>
+                      
+                      <div class="footer">
+                        <p>This is an automated email from Skyway Suites</p>
+                        <p>&copy; ${new Date().getFullYear()} Skyway Suites. All rights reserved.</p>
+                      </div>
+                    </div>
+                  </div>
+                </body>
+                </html>
+              `
+            });
+            
+            console.log('✅ Welcome email sent successfully to:', email);
+          }
+        } catch (emailError) {
+          console.error('❌ Welcome email error:', emailError);
+          // Don't fail signup if email fails
+        }
+        
         const token = generateToken(user.id);
         return res.status(200).json({ user, token });
       }
@@ -857,7 +955,7 @@ You can now use this SMTP configuration for automated notifications.
         // 🎯 AUTO-UPDATE BOOKING STATUS WHEN FULLY PAID
         // Get the booking details
         const bookingResult = await query(
-          'SELECT id, total_price FROM bookings WHERE id = $1',
+          'SELECT id, total_price, property_id, customer_id, check_in, check_out, guests FROM bookings WHERE id = $1',
           [bookingId]
         );
         
@@ -887,6 +985,226 @@ You can now use this SMTP configuration for automated notifications.
               ['confirmed', bookingId]
             );
             console.log('✅ Booking status updated to CONFIRMED');
+            
+            // 📧 SEND PAYMENT CONFIRMATION EMAIL
+            try {
+              console.log('📧 Sending payment confirmation email...');
+              
+              // Get customer details
+              const customerResult = await query('SELECT name, email, phone FROM users WHERE id = $1', [customerId]);
+              const customer = customerResult.rows[0];
+              
+              // Get property details
+              const propertyResult = await query('SELECT title FROM properties WHERE id = $1', [booking.property_id]);
+              const property = propertyResult.rows[0];
+              
+              // Get SMTP settings
+              const settingsResult = await query('SELECT key, value FROM settings WHERE key IN ($1, $2, $3, $4, $5, $6, $7)', [
+                'smtpHost', 'smtpPort', 'smtpUsername', 'smtpPassword', 'smtpSecure', 'emailFromAddress', 'emailFromName'
+              ]);
+              
+              const settings: any = {};
+              settingsResult.rows.forEach((row: any) => {
+                settings[row.key] = row.value;
+              });
+              
+              if (settings.smtpHost && settings.smtpUsername && customer?.email) {
+                const nodemailer = await import('nodemailer');
+                
+                const port = parseInt(settings.smtpPort || '587');
+                const useSSL = settings.smtpSecure === 'true';
+                
+                const transporter = nodemailer.default.createTransport({
+                  host: settings.smtpHost || 'raptor.vivawebhost.com',
+                  port: port,
+                  secure: useSSL,
+                  auth: {
+                    user: settings.smtpUsername || 'info@skywaysuites.co.ke',
+                    pass: settings.smtpPassword || '',
+                  },
+                  connectionTimeout: 10000,
+                  tls: {
+                    rejectUnauthorized: false,
+                    minVersion: 'TLSv1.2'
+                  }
+                });
+                
+                // Send customer confirmation email
+                await transporter.sendMail({
+                  from: `${settings.emailFromName || 'Skyway Suites'} <${settings.emailFromAddress || 'info@skywaysuites.co.ke'}>`,
+                  to: customer.email,
+                  subject: `✅ Payment Confirmed - ${property?.title || 'Your Booking'}`,
+                  html: `
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                      <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                        .header { background: #6B7C3C; color: white; padding: 30px 20px; text-align: center; border-radius: 8px 8px 0 0; }
+                        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
+                        .booking-details { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #6B7C3C; }
+                        .detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; }
+                        .label { font-weight: bold; color: #6B7C3C; }
+                        .value { color: #3a3a3a; }
+                        .success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 15px; border-radius: 5px; margin: 20px 0; }
+                        .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }
+                      </style>
+                    </head>
+                    <body>
+                      <div class="container">
+                        <div class="header">
+                          <h1>✅ Payment Confirmed!</h1>
+                          <p>Your booking is now confirmed</p>
+                        </div>
+                        <div class="content">
+                          <p>Dear ${customer?.name || 'Customer'},</p>
+                          
+                          <div class="success">
+                            <strong>✓ Payment Successful</strong><br>
+                            We have received your full payment of <strong>KSh ${totalPaid.toLocaleString()}</strong>. Your booking is now <strong>confirmed</strong>!
+                          </div>
+                          
+                          <div class="booking-details">
+                            <h3 style="margin-top: 0; color: #6B7C3C;">Booking Confirmation</h3>
+                            <div class="detail-row">
+                              <span class="label">Property:</span>
+                              <span class="value">${property?.title || 'N/A'}</span>
+                            </div>
+                            <div class="detail-row">
+                              <span class="label">Check-in:</span>
+                              <span class="value">${booking.check_in}</span>
+                            </div>
+                            <div class="detail-row">
+                              <span class="label">Check-out:</span>
+                              <span class="value">${booking.check_out}</span>
+                            </div>
+                            <div class="detail-row">
+                              <span class="label">Guests:</span>
+                              <span class="value">${booking.guests}</span>
+                            </div>
+                            <div class="detail-row">
+                              <span class="label">Total Paid:</span>
+                              <span class="value" style="color: #6B7C3C; font-weight: bold;">KSh ${totalPaid.toLocaleString()}</span>
+                            </div>
+                            <div class="detail-row">
+                              <span class="label">Payment Method:</span>
+                              <span class="value">${paymentMethod}</span>
+                            </div>
+                            <div class="detail-row">
+                              <span class="label">Status:</span>
+                              <span class="value" style="color: #28a745; font-weight: bold;">✓ CONFIRMED</span>
+                            </div>
+                          </div>
+                          
+                          <p><strong>What's Next?</strong></p>
+                          <ul>
+                            <li>You will receive a reminder 24 hours before check-in</li>
+                            <li>Please bring a valid ID for verification</li>
+                            <li>Contact us if you have any special requests</li>
+                          </ul>
+                          
+                          <p>We look forward to welcoming you!</p>
+                          
+                          <div class="footer">
+                            <p>This is an automated email from Skyway Suites</p>
+                            <p>&copy; ${new Date().getFullYear()} Skyway Suites. All rights reserved.</p>
+                          </div>
+                        </div>
+                      </div>
+                    </body>
+                    </html>
+                  `
+                });
+                
+                console.log('✅ Payment confirmation email sent to customer:', customer.email);
+                
+                // Send admin notification
+                await transporter.sendMail({
+                  from: `${settings.emailFromName || 'Skyway Suites'} <${settings.emailFromAddress || 'info@skywaysuites.co.ke'}>`,
+                  to: settings.emailFromAddress || 'info@skywaysuites.co.ke',
+                  subject: `💰 Payment Received - ${customer?.name || 'Customer'}`,
+                  html: `
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                      <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                        .header { background: #3a3a3a; color: white; padding: 30px 20px; text-align: center; border-radius: 8px 8px 0 0; }
+                        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
+                        .booking-details { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #6B7C3C; }
+                        .detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; }
+                        .label { font-weight: bold; color: #6B7C3C; }
+                        .value { color: #3a3a3a; }
+                      </style>
+                    </head>
+                    <body>
+                      <div class="container">
+                        <div class="header">
+                          <h1>💰 Payment Received</h1>
+                        </div>
+                        <div class="content">
+                          <p><strong>Full payment received and booking confirmed!</strong></p>
+                          
+                          <div class="booking-details">
+                            <h3 style="margin-top: 0; color: #6B7C3C;">Payment Details</h3>
+                            <div class="detail-row">
+                              <span class="label">Customer:</span>
+                              <span class="value">${customer?.name || 'N/A'}</span>
+                            </div>
+                            <div class="detail-row">
+                              <span class="label">Email:</span>
+                              <span class="value">${customer?.email || 'N/A'}</span>
+                            </div>
+                            <div class="detail-row">
+                              <span class="label">Amount:</span>
+                              <span class="value" style="color: #6B7C3C; font-weight: bold;">KSh ${amount.toLocaleString()}</span>
+                            </div>
+                            <div class="detail-row">
+                              <span class="label">Method:</span>
+                              <span class="value">${paymentMethod}</span>
+                            </div>
+                            <div class="detail-row">
+                              <span class="label">Total Paid:</span>
+                              <span class="value">KSh ${totalPaid.toLocaleString()}</span>
+                            </div>
+                          </div>
+                          
+                          <div class="booking-details">
+                            <h3 style="margin-top: 0; color: #6B7C3C;">Booking Details</h3>
+                            <div class="detail-row">
+                              <span class="label">Property:</span>
+                              <span class="value">${property?.title || 'N/A'}</span>
+                            </div>
+                            <div class="detail-row">
+                              <span class="label">Check-in:</span>
+                              <span class="value">${booking.check_in}</span>
+                            </div>
+                            <div class="detail-row">
+                              <span class="label">Check-out:</span>
+                              <span class="value">${booking.check_out}</span>
+                            </div>
+                            <div class="detail-row">
+                              <span class="label">Status:</span>
+                              <span class="value" style="color: #28a745; font-weight: bold;">✓ CONFIRMED</span>
+                            </div>
+                          </div>
+                          
+                          <p>Customer has been notified of the confirmation.</p>
+                        </div>
+                      </div>
+                    </body>
+                    </html>
+                  `
+                });
+                
+                console.log('✅ Payment notification email sent to admin');
+              }
+            } catch (emailError) {
+              console.error('❌ Payment confirmation email error:', emailError);
+              // Don't fail payment if email fails
+            }
           }
         }
         
