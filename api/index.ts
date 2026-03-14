@@ -246,6 +246,57 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // ============================================
+    // EMAIL DIAGNOSTICS ENDPOINT
+    // ============================================
+    if (endpoint === 'email-diagnostics' && req.method === 'GET') {
+      try {
+        // Check SMTP settings
+        const settingsResult = await query('SELECT key, value FROM settings WHERE key IN ($1, $2, $3, $4, $5, $6, $7)', [
+          'smtpHost', 'smtpPort', 'smtpUsername', 'smtpPassword', 'smtpSecure', 'emailFromAddress', 'emailFromName'
+        ]);
+        
+        const settings: any = {};
+        settingsResult.rows.forEach((row: any) => {
+          settings[row.key] = row.value;
+        });
+        
+        // Count customers with emails
+        const customersResult = await query('SELECT COUNT(*) as count FROM users WHERE role = $1 AND email IS NOT NULL', ['customer']);
+        const customersWithEmail = customersResult.rows[0]?.count || 0;
+        
+        // Get sample customer
+        const sampleCustomerResult = await query('SELECT id, name, email FROM users WHERE role = $1 AND email IS NOT NULL LIMIT 1', ['customer']);
+        const sampleCustomer = sampleCustomerResult.rows[0] || null;
+        
+        return res.status(200).json({
+          smtpConfigured: !!settings.smtpHost && !!settings.smtpUsername,
+          settings: {
+            smtpHost: settings.smtpHost || '(not set)',
+            smtpPort: settings.smtpPort || '(not set)',
+            smtpUsername: settings.smtpUsername || '(not set)',
+            hasPassword: !!settings.smtpPassword,
+            smtpSecure: settings.smtpSecure || '(not set)',
+            emailFromAddress: settings.emailFromAddress || '(not set)',
+            emailFromName: settings.emailFromName || '(not set)',
+          },
+          database: {
+            customersWithEmail: parseInt(customersWithEmail),
+            sampleCustomer: sampleCustomer ? {
+              id: sampleCustomer.id,
+              name: sampleCustomer.name,
+              email: sampleCustomer.email
+            } : null
+          }
+        });
+      } catch (error) {
+        return res.status(500).json({ 
+          error: 'Diagnostics failed', 
+          details: error instanceof Error ? error.message : String(error) 
+        });
+      }
+    }
+
+    // ============================================
     // TEST EMAIL ENDPOINT
     // ============================================
     if (endpoint === 'test-email' && req.method === 'POST') {

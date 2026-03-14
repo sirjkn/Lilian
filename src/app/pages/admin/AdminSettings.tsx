@@ -309,6 +309,11 @@ export function AdminSettings() {
       });
       
       toast.success('Raptor mail server settings initialized and saved!');
+      
+      // Reload settings to confirm they were saved
+      setTimeout(() => {
+        loadNotificationSettings();
+      }, 500);
     } catch (error) {
       toast.error('Failed to initialize settings');
     }

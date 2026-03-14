@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation, useNavigate } from 'react-router';
-import { Building2, Home, Calendar, Users, CreditCard, Settings, LogOut, Menu, X } from 'lucide-react';
+import { Building2, Home, Calendar, Users, CreditCard, Settings, LogOut, Menu, X, Mail } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useEffect, useState } from 'react';
 import { OfflineBanner } from '../OfflineBanner';
@@ -57,6 +57,7 @@ export function AdminLayout() {
     { path: '/admin/customers', label: 'Customers', icon: Users },
     { path: '/admin/payments', label: 'Payments', icon: CreditCard },
     { path: '/admin/settings', label: 'Settings', icon: Settings },
+    { path: '/admin/email-diagnostics', label: 'Email Diagnostics', icon: Mail },
   ];
 
   const handleLogout = () => {
