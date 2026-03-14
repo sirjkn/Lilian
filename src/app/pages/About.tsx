@@ -1,8 +1,26 @@
 import { Building2, Target, Heart, Award } from 'lucide-react';
+import { SEO } from '../components/SEO';
+import { BreadcrumbStructuredData } from '../components/StructuredData';
 
 export function About() {
   return (
     <div className="py-16">
+      <SEO 
+        title="About Us"
+        description="Learn about Skyway Suites - Kenya's premier vacation rental platform. Discover our mission to provide exceptional accommodation experiences in Nairobi and beyond."
+        url="/about"
+        keywords={[
+          'about us',
+          'company information',
+          'vacation rental company',
+          'Kenya hospitality',
+        ]}
+      />
+      <BreadcrumbStructuredData items={[
+        { name: 'Home', url: '/' },
+        { name: 'About Us', url: '/about' },
+      ]} />
+      
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Hero */}
         <div className="text-center mb-16">

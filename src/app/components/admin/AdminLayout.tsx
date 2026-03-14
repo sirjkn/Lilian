@@ -64,7 +64,11 @@ export function AdminLayout() {
 
   const handleLogout = () => {
     logout();
-    navigate('/');
+    // Navigate to home page after logout
+    // Use setTimeout to avoid race condition with useEffect redirect
+    setTimeout(() => {
+      navigate('/', { replace: true });
+    }, 0);
   };
 
   if (!user || !isAdmin) {

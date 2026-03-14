@@ -18,6 +18,8 @@ import { useAuth } from '../context/AuthContext';
 import { toast } from 'sonner';
 import { PhotoGallery } from '../components/PhotoGallery';
 import { formatDateOnly } from '../lib/dateUtils';
+import { SEO } from '../components/SEO';
+import { PropertyStructuredData, BreadcrumbStructuredData } from '../components/StructuredData';
 
 export function PropertyDetails() {
   const { id } = useParams<{ id: string }>();
@@ -542,6 +544,30 @@ export function PropertyDetails() {
           </div>
         </div>
       </div>
+      <SEO
+        title={property.title}
+        description={property.description}
+        image={property.image}
+        url={`/properties/${property.id}`}
+        type="product"
+        price={property.price}
+        keywords={[
+          property.location,
+          property.category || '',
+          'vacation rental',
+          'short term stay',
+          `${property.bedrooms} bedroom`,
+          `${property.guests} guests`,
+        ]}
+      />
+      <PropertyStructuredData property={property} />
+      <BreadcrumbStructuredData
+        items={[
+          { name: 'Home', url: '/' },
+          { name: 'Properties', url: '/properties' },
+          { name: property.title, url: `/properties/${property.id}` },
+        ]}
+      />
     </div>
   );
 }

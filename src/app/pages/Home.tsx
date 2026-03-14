@@ -4,6 +4,8 @@ import { Button } from '../components/ui/button';
 import { useEffect, useState } from 'react';
 import { getProperties, Property, getHeroSettings } from '../lib/api';
 import { PropertyCard } from '../components/PropertyCard';
+import { SEO } from '../components/SEO';
+import { OrganizationStructuredData, BreadcrumbStructuredData } from '../components/StructuredData';
 
 export function Home() {
   const [properties, setProperties] = useState<Property[]>([]);
@@ -20,6 +22,23 @@ export function Home() {
 
   return (
     <div>
+      <SEO 
+        title="Skyway Suites - Premium Vacation Rentals in Kenya"
+        description="Discover luxury vacation rentals and accommodation in Nairobi and its environs. Book your perfect stay with Skyway Suites - verified properties, best prices, instant booking."
+        url="/"
+        keywords={[
+          'vacation rentals',
+          'Nairobi hotels',
+          'Kenya accommodation',
+          'luxury suites',
+          'short term rental',
+          'Airbnb Kenya',
+          'serviced apartments',
+        ]}
+      />
+      <OrganizationStructuredData />
+      <BreadcrumbStructuredData items={[{ name: 'Home', url: '/' }]} />
+      
       {/* Hero Section */}
       <section
         className="relative h-[500px] bg-cover bg-center"

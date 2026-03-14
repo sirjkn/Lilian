@@ -4,6 +4,8 @@ import { getProperties, Property } from '../lib/api';
 import { PropertyCard } from '../components/PropertyCard';
 import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
+import { SEO } from '../components/SEO';
+import { BreadcrumbStructuredData } from '../components/StructuredData';
 
 export function AllProperties() {
   const [properties, setProperties] = useState<Property[]>([]);
@@ -26,6 +28,23 @@ export function AllProperties() {
 
   return (
     <div className="py-12">
+      <SEO 
+        title="Browse All Properties"
+        description="Explore our complete collection of vacation rentals and accommodations in Kenya. Find apartments, villas, and luxury suites in Nairobi and surrounding areas. Book your perfect stay today."
+        url="/properties"
+        keywords={[
+          'browse properties',
+          'all listings',
+          'Kenya rentals',
+          'available properties',
+          'accommodation search',
+        ]}
+      />
+      <BreadcrumbStructuredData items={[
+        { name: 'Home', url: '/' },
+        { name: 'All Properties', url: '/properties' },
+      ]} />
+      
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <h1 className="text-4xl mb-8">All Properties</h1>
 

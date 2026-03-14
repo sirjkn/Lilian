@@ -1,10 +1,11 @@
 import { RouterProvider } from 'react-router';
 import { router } from './routes';
 import { Toaster } from 'sonner';
+import { HelmetProvider } from 'react-helmet-async';
 
 export default function App() {
   return (
-    <>
+    <HelmetProvider>
       <RouterProvider router={router} />
       <Toaster 
         position="bottom-right" 
@@ -14,6 +15,6 @@ export default function App() {
           },
         }}
       />
-    </>
+    </HelmetProvider>
   );
 }

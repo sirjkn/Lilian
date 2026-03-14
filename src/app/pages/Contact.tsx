@@ -4,6 +4,8 @@ import { Input } from '../components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { SEO } from '../components/SEO';
+import { BreadcrumbStructuredData } from '../components/StructuredData';
 
 export function Contact() {
   const [name, setName] = useState('');
@@ -39,6 +41,23 @@ export function Contact() {
 
   return (
     <div className="py-12">
+      <SEO 
+        title="Contact Us"
+        description="Get in touch with Skyway Suites. Contact our team for property inquiries, booking assistance, or general questions. We're here to help make your stay perfect."
+        url="/contact"
+        keywords={[
+          'contact us',
+          'customer support',
+          'booking help',
+          'property inquiries',
+          'Kenya accommodation support',
+        ]}
+      />
+      <BreadcrumbStructuredData items={[
+        { name: 'Home', url: '/' },
+        { name: 'Contact Us', url: '/contact' },
+      ]} />
+      
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <h1 className="text-4xl mb-4">Contact Us</h1>
