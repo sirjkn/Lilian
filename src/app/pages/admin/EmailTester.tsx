@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
-
-const API_BASE_URL = 'https://skyway-suites.vercel.app/api';
+import { API_BASE_URL } from '../../lib/api';
 
 export default function EmailTester() {
   const [testEmail, setTestEmail] = useState('');
