@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router';
+import { Link, useLocation, useNavigate } from 'react-router';
 import { Building2, Menu, X } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
@@ -7,9 +7,18 @@ import { Button } from './ui/button';
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const { user, logout, isAdmin } = useAuth();
 
   const isActive = (path: string) => location.pathname === path;
+
+  const handleLogout = () => {
+    logout();
+    // Use setTimeout to avoid race conditions with React Router
+    setTimeout(() => {
+      navigate('/', { replace: true });
+    }, 0);
+  };
 
   const navLinks = [
     { path: '/', label: 'Home' },
@@ -73,7 +82,7 @@ export function Header() {
                       </Button>
                     </Link>
                   )}
-                  <Button onClick={logout} variant="outline" size="sm" className="bg-transparent text-white border-white hover:bg-white hover:text-[#3a3a3a]">
+                  <Button onClick={handleLogout} variant="outline" size="sm" className="bg-transparent text-white border-white hover:bg-white hover:text-[#3a3a3a]">
                     Logout
                   </Button>
                 </>
@@ -169,10 +178,7 @@ export function Header() {
                 </Link>
               )}
               <Button
-                onClick={() => {
-                  logout();
-                  setMobileMenuOpen(false);
-                }}
+                onClick={handleLogout}
                 variant="outline"
                 size="sm"
                 className="w-full bg-transparent text-white border-white hover:bg-white hover:text-[#3a3a3a]"

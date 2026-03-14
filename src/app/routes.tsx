@@ -22,6 +22,7 @@ import EmailTemplates from "./pages/admin/EmailTemplates";
 import { MaintenanceWrapper } from "./components/MaintenanceWrapper";
 import { RealtimeIndicator } from "./components/RealtimeIndicator";
 import { DatabaseStatus } from "./components/DatabaseStatus";
+import { RouteError } from "./components/RouteError";
 
 // Root component that provides auth context to all routes
 function Root() {
@@ -39,34 +40,37 @@ function Root() {
 export const router = createBrowserRouter([
   {
     element: <Root />,
+    errorElement: <RouteError />,
     children: [
       {
         path: "/",
         Component: Layout,
+        errorElement: <RouteError />,
         children: [
-          { index: true, Component: Home },
-          { path: "about", Component: About },
-          { path: "properties", Component: AllProperties },
-          { path: "properties/:id", Component: PropertyDetails },
-          { path: "contact", Component: Contact },
-          { path: "create-account", Component: CreateAccount },
-          { path: "login", Component: Login },
-          { path: "profile", Component: CustomerProfile },
+          { index: true, Component: Home, errorElement: <RouteError /> },
+          { path: "about", Component: About, errorElement: <RouteError /> },
+          { path: "properties", Component: AllProperties, errorElement: <RouteError /> },
+          { path: "properties/:id", Component: PropertyDetails, errorElement: <RouteError /> },
+          { path: "contact", Component: Contact, errorElement: <RouteError /> },
+          { path: "create-account", Component: CreateAccount, errorElement: <RouteError /> },
+          { path: "login", Component: Login, errorElement: <RouteError /> },
+          { path: "profile", Component: CustomerProfile, errorElement: <RouteError /> },
         ],
       },
       {
         path: "/admin",
         Component: AdminLayout,
+        errorElement: <RouteError />,
         children: [
-          { index: true, Component: AdminProperties },
-          { path: "properties", Component: AdminProperties },
-          { path: "bookings", Component: AdminBookings },
-          { path: "customers", Component: AdminCustomers },
-          { path: "payments", Component: AdminPayments },
-          { path: "settings", Component: AdminSettings },
-          { path: "email-diagnostics", Component: EmailDiagnostics },
-          { path: "debug-settings", Component: DebugSettings },
-          { path: "email-templates", Component: EmailTemplates },
+          { index: true, Component: AdminProperties, errorElement: <RouteError /> },
+          { path: "properties", Component: AdminProperties, errorElement: <RouteError /> },
+          { path: "bookings", Component: AdminBookings, errorElement: <RouteError /> },
+          { path: "customers", Component: AdminCustomers, errorElement: <RouteError /> },
+          { path: "payments", Component: AdminPayments, errorElement: <RouteError /> },
+          { path: "settings", Component: AdminSettings, errorElement: <RouteError /> },
+          { path: "email-diagnostics", Component: EmailDiagnostics, errorElement: <RouteError /> },
+          { path: "debug-settings", Component: DebugSettings, errorElement: <RouteError /> },
+          { path: "email-templates", Component: EmailTemplates, errorElement: <RouteError /> },
         ],
       },
       {
