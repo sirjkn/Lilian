@@ -14,22 +14,36 @@ export default function EmailDiagnostics() {
   const loadDiagnostics = async () => {
     try {
       setLoading(true);
+      console.log('Fetching diagnostics from:', `${API_BASE_URL}?endpoint=email-diagnostics`);
+      
       const response = await fetch(`${API_BASE_URL}?endpoint=email-diagnostics`);
       
+      console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+      
       if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Diagnostics error:', errorData);
-        toast.error(`Failed to load diagnostics: ${errorData.details || errorData.error}`);
+        const errorText = await response.text();
+        console.error('Error response text:', errorText);
+        
+        try {
+          const errorData = JSON.parse(errorText);
+          console.error('Diagnostics error data:', errorData);
+          toast.error(`Failed to load diagnostics: ${errorData.details || errorData.error}`);
+        } catch {
+          toast.error(`Failed to load diagnostics: ${errorText}`);
+        }
+        
         setDiagnostics(null);
         return;
       }
       
       const data = await response.json();
-      console.log('Diagnostics data:', data);
+      console.log('✅ Diagnostics data loaded successfully:', data);
       setDiagnostics(data);
+      toast.success('Diagnostics loaded successfully');
     } catch (error) {
-      console.error('Diagnostics fetch error:', error);
-      toast.error('Failed to load diagnostics - check console for details');
+      console.error('❌ Diagnostics fetch error:', error);
+      toast.error(`Failed to load diagnostics: ${error instanceof Error ? error.message : 'Unknown error'}`);
       setDiagnostics(null);
     } finally {
       setLoading(false);

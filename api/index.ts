@@ -146,14 +146,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         try {
           console.log('📧 Sending welcome email to new user:', email);
           
-          // Get SMTP settings
-          const settingsResult = await query('SELECT key, value FROM settings WHERE key IN ($1, $2, $3, $4, $5, $6, $7)', [
-            'smtpHost', 'smtpPort', 'smtpUsername', 'smtpPassword', 'smtpSecure', 'emailFromAddress', 'emailFromName'
-          ]);
+          // Get SMTP settings from notifications category
+          const settingsResult = await query("SELECT key, value FROM settings WHERE category = 'notifications'");
           
           const settings: any = {};
           settingsResult.rows.forEach((row: any) => {
             settings[row.key] = row.value;
+          });
+          
+          console.log('📧 SMTP Settings loaded:', {
+            hasSmtpHost: !!settings.smtpHost,
+            hasSmtpUsername: !!settings.smtpUsername,
+            hasSmtpPassword: !!settings.smtpPassword,
+            smtpHost: settings.smtpHost,
+            smtpUsername: settings.smtpUsername
           });
           
           if (settings.smtpHost && settings.smtpUsername) {
@@ -234,9 +240,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             });
             
             console.log('✅ Welcome email sent successfully to:', email);
+          } else {
+            console.log('⚠️ SMTP not configured - skipping welcome email');
           }
         } catch (emailError) {
           console.error('❌ Welcome email error:', emailError);
+          console.error('❌ Full error details:', emailError instanceof Error ? emailError.stack : emailError);
           // Don't fail signup if email fails
         }
         
