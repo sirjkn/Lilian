@@ -1,21 +1,21 @@
 import { Building2 } from 'lucide-react';
 import { Link } from 'react-router';
 import { useEffect, useState } from 'react';
-import { getSettings } from '../lib/api';
+import { getCompanyInfo, CompanyInfo } from '../lib/api';
 
 export function Footer() {
-  const [settings, setSettings] = useState<any>(null);
+  const [companyInfo, setCompanyInfo] = useState<CompanyInfo | null>(null);
 
   useEffect(() => {
-    const loadSettings = async () => {
+    const loadCompanyInfo = async () => {
       try {
-        const data = await getSettings();
-        setSettings(data);
+        const data = await getCompanyInfo();
+        setCompanyInfo(data);
       } catch (error) {
-        console.error('Failed to load settings:', error);
+        console.error('Failed to load company info:', error);
       }
     };
-    loadSettings();
+    loadCompanyInfo();
   }, []);
 
   return (
@@ -65,10 +65,9 @@ export function Footer() {
           <div>
             <h3 className="text-white font-semibold mb-4">Contact</h3>
             <ul className="space-y-2 text-sm">
-              <li>Email: {settings?.companyEmail || 'info@skywaysuites.com'}</li>
-              <li>Phone: {settings?.companyPhone || '+1 (555) 123-4567'}</li>
-              <li>Address: {settings?.companyAddress || '123 Main St, Suite 100'}</li>
-              <li>{settings?.companyCity || 'New York'}, {settings?.companyCountry || 'NY 10001'}</li>
+              <li>Email: {companyInfo?.email || 'info@skywaysuites.com'}</li>
+              <li>Phone: {companyInfo?.phone || '+1 (555) 123-4567'}</li>
+              <li>{companyInfo?.address || '123 Main St, Suite 100, New York, NY 10001'}</li>
             </ul>
           </div>
         </div>
