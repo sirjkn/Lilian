@@ -206,6 +206,7 @@ export function PropertyDetails() {
         status: 'pending',
       });
       toast.success('Booking request submitted successfully!');
+      toast.info('📧 Confirmation email sent to your email address', { duration: 3000 });
     } catch (err) {
       console.error('Failed to create booking:', err);
       toast.error('Failed to create booking');

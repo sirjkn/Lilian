@@ -508,11 +508,219 @@ You can now use this SMTP configuration for automated notifications.
 
       if (req.method === 'POST') {
         const { propertyId, customerId, checkIn, checkOut, guests, totalPrice } = req.body;
+        
+        // Create the booking
         const result = await query(
           'INSERT INTO bookings (property_id, customer_id, check_in, check_out, guests, total_price) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
           [propertyId, customerId, checkIn, checkOut, guests, totalPrice]
         );
-        return res.status(200).json(transformBooking(result.rows[0]));
+        
+        const booking = transformBooking(result.rows[0]);
+        
+        // 📧 SEND EMAIL NOTIFICATION
+        try {
+          // Get customer details
+          const customerResult = await query('SELECT name, email, phone FROM users WHERE id = $1', [customerId]);
+          const customer = customerResult.rows[0];
+          
+          // Get property details
+          const propertyResult = await query('SELECT title FROM properties WHERE id = $1', [propertyId]);
+          const property = propertyResult.rows[0];
+          
+          // Get notification settings
+          const settingsResult = await query('SELECT key, value FROM settings WHERE key IN ($1, $2, $3, $4, $5, $6, $7)', [
+            'smtpHost', 'smtpPort', 'smtpUsername', 'smtpPassword', 'smtpSecure', 'emailFromAddress', 'emailFromName'
+          ]);
+          
+          const settings: any = {};
+          settingsResult.rows.forEach((row: any) => {
+            settings[row.key] = row.value;
+          });
+          
+          // Only send if SMTP is configured
+          if (settings.smtpHost && settings.smtpUsername && customer?.email) {
+            const nodemailer = await import('nodemailer');
+            
+            const port = parseInt(settings.smtpPort || '587');
+            const useSSL = settings.smtpSecure === 'true';
+            
+            const transporter = nodemailer.default.createTransport({
+              host: settings.smtpHost || 'mail.skywaysuites.co.ke',
+              port: port,
+              secure: useSSL,
+              auth: {
+                user: settings.smtpUsername || 'info@skywaysuites.co.ke',
+                pass: settings.smtpPassword || '',
+              },
+              connectionTimeout: 10000,
+              tls: {
+                rejectUnauthorized: false,
+                minVersion: 'TLSv1.2'
+              }
+            });
+            
+            // Send customer email
+            await transporter.sendMail({
+              from: `${settings.emailFromName || 'Skyway Suites'} <${settings.emailFromAddress || 'info@skywaysuites.co.ke'}>`,
+              to: customer.email,
+              subject: `🎉 New Booking Created - ${property?.title || 'Property'}`,
+              html: `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                  <style>
+                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                    .header { background: #6B7C3C; color: white; padding: 30px 20px; text-align: center; border-radius: 8px 8px 0 0; }
+                    .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
+                    .booking-details { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #6B7C3C; }
+                    .detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; }
+                    .label { font-weight: bold; color: #6B7C3C; }
+                    .value { color: #3a3a3a; }
+                    .warning { background: #fff3cd; border: 1px solid #ffc107; color: #856404; padding: 15px; border-radius: 5px; margin: 20px 0; }
+                    .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }
+                  </style>
+                </head>
+                <body>
+                  <div class="container">
+                    <div class="header">
+                      <h1>🎉 Booking Created!</h1>
+                      <p>Thank you for choosing Skyway Suites</p>
+                    </div>
+                    <div class="content">
+                      <p>Dear ${customer?.name || 'Customer'},</p>
+                      <p>Your booking has been successfully created. Here are the details:</p>
+                      
+                      <div class="booking-details">
+                        <h3 style="margin-top: 0; color: #6B7C3C;">Booking Details</h3>
+                        <div class="detail-row">
+                          <span class="label">Property:</span>
+                          <span class="value">${property?.title || 'N/A'}</span>
+                        </div>
+                        <div class="detail-row">
+                          <span class="label">Check-in:</span>
+                          <span class="value">${checkIn}</span>
+                        </div>
+                        <div class="detail-row">
+                          <span class="label">Check-out:</span>
+                          <span class="value">${checkOut}</span>
+                        </div>
+                        <div class="detail-row">
+                          <span class="label">Guests:</span>
+                          <span class="value">${guests}</span>
+                        </div>
+                        <div class="detail-row">
+                          <span class="label">Total Price:</span>
+                          <span class="value">KSh ${totalPrice.toLocaleString()}</span>
+                        </div>
+                      </div>
+                      
+                      <div class="warning">
+                        <strong>⚠️ Payment Required</strong><br>
+                        Your booking is currently <strong>pending</strong>. Please complete your payment to confirm this booking.
+                      </div>
+                      
+                      <p>If you have any questions, please don't hesitate to contact us.</p>
+                      
+                      <div class="footer">
+                        <p>This is an automated email from Skyway Suites</p>
+                        <p>&copy; ${new Date().getFullYear()} Skyway Suites. All rights reserved.</p>
+                      </div>
+                    </div>
+                  </div>
+                </body>
+                </html>
+              `
+            });
+            
+            // Send admin notification
+            await transporter.sendMail({
+              from: `${settings.emailFromName || 'Skyway Suites'} <${settings.emailFromAddress || 'info@skywaysuites.co.ke'}>`,
+              to: settings.emailFromAddress || 'info@skywaysuites.co.ke',
+              subject: `🔔 New Booking Alert - ${customer?.name || 'Customer'}`,
+              html: `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                  <style>
+                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                    .header { background: #3a3a3a; color: white; padding: 30px 20px; text-align: center; border-radius: 8px 8px 0 0; }
+                    .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
+                    .booking-details { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #6B7C3C; }
+                    .detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; }
+                    .label { font-weight: bold; color: #6B7C3C; }
+                    .value { color: #3a3a3a; }
+                  </style>
+                </head>
+                <body>
+                  <div class="container">
+                    <div class="header">
+                      <h1>🔔 New Booking Alert</h1>
+                    </div>
+                    <div class="content">
+                      <p><strong>A new booking has been created!</strong></p>
+                      
+                      <div class="booking-details">
+                        <h3 style="margin-top: 0; color: #6B7C3C;">Customer Information</h3>
+                        <div class="detail-row">
+                          <span class="label">Name:</span>
+                          <span class="value">${customer?.name || 'N/A'}</span>
+                        </div>
+                        <div class="detail-row">
+                          <span class="label">Email:</span>
+                          <span class="value">${customer?.email || 'N/A'}</span>
+                        </div>
+                        <div class="detail-row">
+                          <span class="label">Phone:</span>
+                          <span class="value">${customer?.phone || 'N/A'}</span>
+                        </div>
+                      </div>
+                      
+                      <div class="booking-details">
+                        <h3 style="margin-top: 0; color: #6B7C3C;">Booking Details</h3>
+                        <div class="detail-row">
+                          <span class="label">Property:</span>
+                          <span class="value">${property?.title || 'N/A'}</span>
+                        </div>
+                        <div class="detail-row">
+                          <span class="label">Check-in:</span>
+                          <span class="value">${checkIn}</span>
+                        </div>
+                        <div class="detail-row">
+                          <span class="label">Check-out:</span>
+                          <span class="value">${checkOut}</span>
+                        </div>
+                        <div class="detail-row">
+                          <span class="label">Guests:</span>
+                          <span class="value">${guests}</span>
+                        </div>
+                        <div class="detail-row">
+                          <span class="label">Total Price:</span>
+                          <span class="value">KSh ${totalPrice.toLocaleString()}</span>
+                        </div>
+                        <div class="detail-row">
+                          <span class="label">Status:</span>
+                          <span class="value" style="color: #ffc107;">⏳ Pending Payment</span>
+                        </div>
+                      </div>
+                      
+                      <p>Please follow up with the customer to ensure payment is completed.</p>
+                    </div>
+                  </div>
+                </body>
+                </html>
+              `
+            });
+            
+            console.log('✅ Booking notification emails sent!');
+          }
+        } catch (emailError) {
+          console.error('❌ Failed to send booking notification email:', emailError);
+          // Don't fail the booking if email fails
+        }
+        
+        return res.status(200).json(booking);
       }
     }
 

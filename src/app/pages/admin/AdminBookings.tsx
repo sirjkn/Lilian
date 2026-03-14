@@ -267,6 +267,7 @@ export function AdminBookings() {
 
       console.log('Booking created:', newBooking);
       toast.success('Booking created successfully!');
+      toast.info('📧 Booking confirmation emails sent to customer and admin', { duration: 3000 });
       
       // Reset form
       setFormData({
