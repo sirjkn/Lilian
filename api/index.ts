@@ -170,19 +170,47 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         // Import nodemailer dynamically
         const nodemailer = await import('nodemailer');
         
-        // Create transporter with SMTP settings
+        const port = parseInt(smtpPort || '587');
+        const useSSL = smtpSecure === true || smtpSecure === 'true';
+        
+        console.log('📧 Testing SMTP Configuration:', {
+          host: smtpHost,
+          port,
+          secure: useSSL,
+          user: smtpUsername
+        });
+        
+        // Create transporter with enhanced settings and timeout
         const transporter = nodemailer.default.createTransport({
           host: smtpHost || 'mail.skywaysuites.co.ke',
-          port: parseInt(smtpPort || '465'),
-          secure: smtpSecure !== false, // true for 465, false for other ports
+          port: port,
+          secure: useSSL, // true for 465 (SSL/TLS), false for 587 (STARTTLS)
           auth: {
             user: smtpUsername || 'info@skywaysuites.co.ke',
             pass: smtpPassword || '',
           },
+          // Add connection timeout settings
+          connectionTimeout: 10000, // 10 seconds
+          greetingTimeout: 10000,
+          socketTimeout: 10000,
+          // Additional settings for better compatibility
+          tls: {
+            rejectUnauthorized: false, // Accept self-signed certificates
+            minVersion: 'TLSv1.2'
+          },
+          // Enable debug for troubleshooting
+          debug: true,
+          logger: true
         });
         
+        // Verify connection first
+        console.log('🔌 Verifying SMTP connection...');
+        await transporter.verify();
+        console.log('✅ SMTP connection verified!');
+        
         // Send test email
-        await transporter.sendMail({
+        console.log('📨 Sending test email to:', testEmail);
+        const info = await transporter.sendMail({
           from: `${emailFromName || 'Skyway Suites'} <${emailFromAddress || 'info@skywaysuites.co.ke'}>`,
           to: testEmail,
           subject: '✓ SMTP Test Email - Skyway Suites',
@@ -214,8 +242,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                   <div class="info">
                     <h3>SMTP Configuration Details:</h3>
                     <p><strong>Server:</strong> ${smtpHost || 'mail.skywaysuites.co.ke'}</p>
-                    <p><strong>Port:</strong> ${smtpPort || '465'}</p>
-                    <p><strong>Security:</strong> ${smtpSecure !== false ? 'SSL/TLS' : 'STARTTLS'}</p>
+                    <p><strong>Port:</strong> ${port}</p>
+                    <p><strong>Security:</strong> ${useSSL ? 'SSL/TLS (Port 465)' : 'STARTTLS (Port 587)'}</p>
                     <p><strong>From:</strong> ${emailFromName || 'Skyway Suites'} &lt;${emailFromAddress || 'info@skywaysuites.co.ke'}&gt;</p>
                     <p><strong>Test sent to:</strong> ${testEmail}</p>
                   </div>
@@ -244,8 +272,8 @@ SMTP Test Email - Skyway Suites
 
 SMTP Configuration Details:
 - Server: ${smtpHost || 'mail.skywaysuites.co.ke'}
-- Port: ${smtpPort || '465'}
-- Security: ${smtpSecure !== false ? 'SSL/TLS' : 'STARTTLS'}
+- Port: ${port}
+- Security: ${useSSL ? 'SSL/TLS (Port 465)' : 'STARTTLS (Port 587)'}
 - From: ${emailFromName || 'Skyway Suites'} <${emailFromAddress || 'info@skywaysuites.co.ke'}>
 - Test sent to: ${testEmail}
 
@@ -255,15 +283,45 @@ You can now use this SMTP configuration for automated notifications.
           `,
         });
         
+        console.log('✅ Test email sent successfully! Message ID:', info.messageId);
+        
         return res.status(200).json({ 
           success: true, 
-          message: 'Test email sent successfully!' 
+          message: 'Test email sent successfully!',
+          messageId: info.messageId,
+          config: {
+            host: smtpHost,
+            port,
+            secure: useSSL
+          }
         });
       } catch (error: any) {
-        console.error('Failed to send test email:', error);
+        console.error('❌ Failed to send test email:', error);
+        
+        // Provide detailed error messages
+        let errorMessage = 'Failed to send test email';
+        let suggestion = '';
+        
+        if (error.code === 'ETIMEDOUT' || error.code === 'ECONNECTION') {
+          errorMessage = 'Connection timeout - Could not reach SMTP server';
+          suggestion = 'Try using port 587 with STARTTLS instead of port 465. Many hosting providers (including Vercel) block port 465.';
+        } else if (error.code === 'EAUTH') {
+          errorMessage = 'Authentication failed';
+          suggestion = 'Please check your SMTP username and password are correct.';
+        } else if (error.code === 'EENVELOPE') {
+          errorMessage = 'Invalid email address';
+          suggestion = 'Please check the from/to email addresses are valid.';
+        } else if (error.responseCode === 535) {
+          errorMessage = 'Authentication failed - Invalid credentials';
+          suggestion = 'Your username or password is incorrect.';
+        }
+        
         return res.status(500).json({ 
-          error: 'Failed to send test email',
-          details: error.message 
+          error: errorMessage,
+          details: error.message,
+          suggestion,
+          code: error.code,
+          command: error.command
         });
       }
     }

@@ -47,10 +47,10 @@ export function AdminSettings() {
   
   // SMTP Configuration State
   const [smtpHost, setSmtpHost] = useState('mail.skywaysuites.co.ke');
-  const [smtpPort, setSmtpPort] = useState('465');
+  const [smtpPort, setSmtpPort] = useState('587');
   const [smtpUsername, setSmtpUsername] = useState('info@skywaysuites.co.ke');
   const [smtpPassword, setSmtpPassword] = useState('^we;RW{8OMGUOazE');
-  const [smtpSecure, setSmtpSecure] = useState(true); // SSL/TLS
+  const [smtpSecure, setSmtpSecure] = useState(false); // STARTTLS for 587
   const [testEmail, setTestEmail] = useState('');
   const [isSendingTest, setIsSendingTest] = useState(false);
   
@@ -721,9 +721,9 @@ export function AdminSettings() {
 
                 {emailProvider === 'smtp' ? (
                   <>
-                    <div className="p-3 bg-green-50 rounded-md border border-green-200 text-xs">
-                      <p className="font-semibold text-green-800 mb-1">✓ SMTP Configured</p>
-                      <p className="text-green-700">Your custom SMTP server is ready to send emails</p>
+                    <div className="p-3 bg-amber-50 rounded-md border border-amber-200 text-xs">
+                      <p className="font-semibold text-amber-800 mb-1">⚠️ Port 465 Blocked on Vercel</p>
+                      <p className="text-amber-700">Vercel serverless functions block port 465. <strong>Use port 587 with STARTTLS instead.</strong></p>
                     </div>
                     
                     <div>
@@ -800,7 +800,7 @@ export function AdminSettings() {
                       <p className="mb-1.5"><strong>SMTP Configuration:</strong></p>
                       <ul className="list-disc list-inside space-y-0.5 text-gray-700">
                         <li>Server: {smtpHost || 'mail.skywaysuites.co.ke'}</li>
-                        <li>Port: {smtpPort || '465'} ({smtpSecure ? 'SSL/TLS' : 'STARTTLS'})</li>
+                        <li>Port: {smtpPort || '587'} ({smtpSecure ? 'SSL/TLS' : 'STARTTLS'})</li>
                         <li>Username: {smtpUsername || 'info@skywaysuites.co.ke'}</li>
                         <li>From: {emailFromName || 'Skyway Suites'} &lt;{emailFromAddress || 'info@skywaysuites.co.ke'}&gt;</li>
                       </ul>
