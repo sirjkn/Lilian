@@ -1,4 +1,11 @@
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
+import { Save, Upload, X, Wrench, Mail, MessageCircle, Bell, Settings as SettingsIcon, Users as UsersIcon } from 'lucide-react';
+import * as Tabs from '@radix-ui/react-tabs';
+import * as Switch from '@radix-ui/react-switch';
+import { Button } from '../../components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
+import { Input } from '../../components/ui/input';
 import { 
   getHeroSettings, 
   updateHeroSettings, 
