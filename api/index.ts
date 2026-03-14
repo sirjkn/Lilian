@@ -2,6 +2,29 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { query } from './config/db.js';
 import { hashPassword, verifyPassword, generateToken } from './utils/auth.js';
 
+// Date formatting utilities
+function formatDateTimeEmail(date: string | Date): string {
+  const d = new Date(date);
+  
+  // Get day name (Sat)
+  const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
+  
+  // Get month name (Mar)
+  const monthName = d.toLocaleDateString('en-US', { month: 'short' });
+  
+  // Get day (14)
+  const day = d.getDate();
+  
+  // Get year (2026)
+  const year = d.getFullYear();
+  
+  // Get hours and minutes (12:00)
+  const hours = String(d.getHours()).padStart(2, '0');
+  const minutes = String(d.getMinutes()).padStart(2, '0');
+  
+  return `${dayName} ${monthName} ${day} ${year} ${hours}:${minutes}HRS`;
+}
+
 // Helper to get email template from database or use default
 async function getEmailTemplate(templateId: string, defaultSubject: string, defaultHtml: string) {
   try {
@@ -847,11 +870,11 @@ You can now use this SMTP configuration for automated notifications.
                         </div>
                         <div class="detail-row">
                           <span class="label">Check-in:</span>
-                          <span class="value">${checkIn}</span>
+                          <span class="value">${formatDateTimeEmail(checkIn)}</span>
                         </div>
                         <div class="detail-row">
                           <span class="label">Check-out:</span>
-                          <span class="value">${checkOut}</span>
+                          <span class="value">${formatDateTimeEmail(checkOut)}</span>
                         </div>
                         <div class="detail-row">
                           <span class="label">Guests:</span>
@@ -936,11 +959,11 @@ You can now use this SMTP configuration for automated notifications.
                         </div>
                         <div class="detail-row">
                           <span class="label">Check-in:</span>
-                          <span class="value">${checkIn}</span>
+                          <span class="value">${formatDateTimeEmail(checkIn)}</span>
                         </div>
                         <div class="detail-row">
                           <span class="label">Check-out:</span>
-                          <span class="value">${checkOut}</span>
+                          <span class="value">${formatDateTimeEmail(checkOut)}</span>
                         </div>
                         <div class="detail-row">
                           <span class="label">Guests:</span>
@@ -1185,11 +1208,11 @@ You can now use this SMTP configuration for automated notifications.
                             </div>
                             <div class="detail-row">
                               <span class="label">Check-in:</span>
-                              <span class="value">${booking.check_in}</span>
+                              <span class="value">${formatDateTimeEmail(booking.check_in)}</span>
                             </div>
                             <div class="detail-row">
                               <span class="label">Check-out:</span>
-                              <span class="value">${booking.check_out}</span>
+                              <span class="value">${formatDateTimeEmail(booking.check_out)}</span>
                             </div>
                             <div class="detail-row">
                               <span class="label">Guests:</span>
@@ -1293,11 +1316,11 @@ You can now use this SMTP configuration for automated notifications.
                             </div>
                             <div class="detail-row">
                               <span class="label">Check-in:</span>
-                              <span class="value">${booking.check_in}</span>
+                              <span class="value">${formatDateTimeEmail(booking.check_in)}</span>
                             </div>
                             <div class="detail-row">
                               <span class="label">Check-out:</span>
-                              <span class="value">${booking.check_out}</span>
+                              <span class="value">${formatDateTimeEmail(booking.check_out)}</span>
                             </div>
                             <div class="detail-row">
                               <span class="label">Status:</span>

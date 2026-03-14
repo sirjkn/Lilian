@@ -1,8 +1,9 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router';
-import { MapPin, Users, Bed, Bath } from 'lucide-react';
-import { Property, getPropertyBookings, getPayments, Booking } from '../lib/api';
+import { MapPin, Star, Users } from 'lucide-react';
+import { getBookingsByProperty, getPayments } from '../lib/api';
+import { formatDateOnly } from '../lib/dateUtils';
 import { Card, CardContent } from './ui/card';
-import { useEffect, useState } from 'react';
 
 interface PropertyCardProps {
   property: Property;
@@ -15,7 +16,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
     // Check if property has active confirmed bookings with full payment
     async function checkBookingStatus() {
       try {
-        const bookings = await getPropertyBookings(property.id);
+        const bookings = await getBookingsByProperty(property.id);
         const payments = await getPayments();
         const now = new Date();
         
@@ -47,7 +48,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
           
           // If booking is confirmed and fully paid, property is booked
           if (totalPaid >= booking.totalPrice) {
-            const checkOutDate = new Date(booking.checkOut).toLocaleDateString();
+            const checkOutDate = formatDateOnly(new Date(booking.checkOut));
             console.log(`✅ Property BOOKED until ${checkOutDate}`);
             setBookedUntil(checkOutDate);
             return;
@@ -113,12 +114,8 @@ export function PropertyCard({ property }: PropertyCardProps) {
               {property.guests}
             </div>
             <div className="flex items-center gap-1">
-              <Bed className="h-4 w-4" />
+              <Star className="h-4 w-4" />
               {property.bedrooms}
-            </div>
-            <div className="flex items-center gap-1">
-              <Bath className="h-4 w-4" />
-              {property.bathrooms}
             </div>
           </div>
         </CardContent>

@@ -9,6 +9,7 @@ import { Combobox } from '../../components/ui/combobox';
 import { toast } from 'sonner';
 import * as Dialog from '@radix-ui/react-dialog';
 import { sendCustomerBookingConfirmation, sendAdminBookingNotification } from '../../lib/notificationService';
+import { formatDateTime } from '../../lib/dateUtils';
 
 export function AdminBookings() {
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -398,8 +399,8 @@ export function AdminBookings() {
                     <td className="py-2 px-3 font-mono text-xs">#{booking.id.slice(0, 8)}</td>
                     <td className="py-2 px-3">{getPropertyName(booking.propertyId)}</td>
                     <td className="py-2 px-3 text-gray-600">{getCustomerName(booking.customerId)}</td>
-                    <td className="py-2 px-3 text-gray-600">{booking.checkIn}</td>
-                    <td className="py-2 px-3 text-gray-600">{booking.checkOut}</td>
+                    <td className="py-2 px-3 text-gray-600">{formatDateTime(booking.checkIn)}</td>
+                    <td className="py-2 px-3 text-gray-600">{formatDateTime(booking.checkOut)}</td>
                     <td className="py-2 px-3">
                       {(() => {
                         const remainingBalance = getRemainingBalance(booking);

@@ -17,6 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'sonner';
 import { PhotoGallery } from '../components/PhotoGallery';
+import { formatDateOnly } from '../lib/dateUtils';
 
 export function PropertyDetails() {
   const { id } = useParams<{ id: string }>();

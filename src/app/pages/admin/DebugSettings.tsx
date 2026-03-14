@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Button } from '../../components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { API_BASE_URL } from '../../lib/api';
 import { toast } from 'sonner';
 
@@ -134,6 +134,50 @@ export default function DebugSettings() {
               </div>
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      {/* Initialize Raptor Settings */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Raptor Settings</CardTitle>
+          <CardDescription>
+            Initialize the Raptor settings in the database
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-gray-600">
+            Click below to initialize the Raptor settings. This is required before you can use the Raptor features.
+          </p>
+          <Button 
+            onClick={initializeRaptorSettings}
+            disabled={loading}
+            className="w-full"
+          >
+            Initialize Raptor Settings
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Create Email Templates Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Email Templates Table</CardTitle>
+          <CardDescription>
+            Initialize the email_templates table in the database
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-gray-600">
+            Click below to create the email_templates table. This is required before you can use the Email Templates editor.
+          </p>
+          <Button 
+            onClick={createEmailTemplatesTable}
+            disabled={loading}
+            className="w-full"
+          >
+            Create Email Templates Table
+          </Button>
         </CardContent>
       </Card>
     </div>

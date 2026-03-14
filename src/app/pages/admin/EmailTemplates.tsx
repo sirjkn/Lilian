@@ -360,7 +360,9 @@ export default function EmailTemplates() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to save template');
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('Save template error:', errorData);
+        throw new Error(errorData.error || 'Failed to save template');
       }
 
       // Update local state
@@ -373,7 +375,13 @@ export default function EmailTemplates() {
       toast.success('Email template saved successfully!');
     } catch (error) {
       console.error('Failed to save template:', error);
-      toast.error('Failed to save template');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to save template';
+      toast.error(errorMessage);
+      
+      // If error mentions table not existing, show helpful message
+      if (errorMessage.includes('relation') || errorMessage.includes('email_templates')) {
+        toast.error('Email templates table does not exist. Please create it first from Debug Settings page.');
+      }
     } finally {
       setLoading(false);
     }

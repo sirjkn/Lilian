@@ -1,17 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { getBookings, getProperties, updateUser, Booking, Property } from '../lib/api';
+import { getBookingsByCustomer, getProperties, Property, Booking, getPayments, Payment } from '../lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { toast } from 'sonner';
-import { User, Lock, Calendar, MapPin, DollarSign } from 'lucide-react';
+import { MapPin, Calendar, Users, DollarSign } from 'lucide-react';
 import { Link } from 'react-router';
+import { formatDateTime } from '../lib/dateUtils';
 
 export function CustomerProfile() {
   const { user, logout } = useAuth();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [properties, setProperties] = useState<Property[]>([]);
+  const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
   
   // Profile edit state
@@ -39,15 +39,17 @@ export function CustomerProfile() {
         return;
       }
       
-      const [bookingsData, propertiesData] = await Promise.all([
-        getBookings().catch(() => []),
-        getProperties().catch(() => [])
+      const [bookingsData, propertiesData, paymentsData] = await Promise.all([
+        getBookingsByCustomer(user.id).catch(() => []),
+        getProperties().catch(() => []),
+        getPayments(user.id).catch(() => [])
       ]);
       
       // Filter bookings for this customer
       const myBookings = bookingsData.filter(b => b.customerId === user?.id);
       setBookings(myBookings);
       setProperties(propertiesData);
+      setPayments(paymentsData);
     } catch (error) {
       console.error('Error loading data:', error);
       // Don't show error toast if API is not available
