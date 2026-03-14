@@ -85,58 +85,58 @@ export function Home() {
             <h2 className="text-3xl mb-4">Why Choose Skyway Suites?</h2>
             <p className="text-gray-600">Experience the best in vacation rentals</p>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <div className="text-center p-6 bg-[#6B7C3C] rounded-2xl hover:bg-[#C9B99B] transition-colors duration-300 flex flex-col items-center justify-start h-full">
-              <div className="w-12 h-12 bg-[#3a3a3a] rounded-full flex items-center justify-center mx-auto mb-3">
-                <MapPin className="h-6 w-6 text-white" />
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-8">
+            <div className="text-center p-4 sm:p-6 bg-[#6B7C3C] rounded-xl sm:rounded-2xl hover:bg-[#C9B99B] transition-colors duration-300 flex flex-col items-center justify-start h-full">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#3a3a3a] rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3">
+                <MapPin className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
               </div>
-              <h3 className="text-lg mb-2 text-white">Prime Locations</h3>
-              <p className="text-sm text-white">
+              <h3 className="text-base sm:text-lg mb-1 sm:mb-2 text-white">Prime Locations</h3>
+              <p className="text-xs sm:text-sm text-white">
                 Properties in the most desirable destinations worldwide
               </p>
             </div>
-            <div className="text-center p-6 bg-[#6B7C3C] rounded-2xl hover:bg-[#C9B99B] transition-colors duration-300 flex flex-col items-center justify-start h-full">
-              <div className="w-12 h-12 bg-[#3a3a3a] rounded-full flex items-center justify-center mx-auto mb-3">
-                <Shield className="h-6 w-6 text-white" />
+            <div className="text-center p-4 sm:p-6 bg-[#6B7C3C] rounded-xl sm:rounded-2xl hover:bg-[#C9B99B] transition-colors duration-300 flex flex-col items-center justify-start h-full">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#3a3a3a] rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3">
+                <Shield className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
               </div>
-              <h3 className="text-lg mb-2 text-white">Secure Payments</h3>
-              <p className="text-sm text-white">
+              <h3 className="text-base sm:text-lg mb-1 sm:mb-2 text-white">Secure Payments</h3>
+              <p className="text-xs sm:text-sm text-white">
                 Safe and encrypted payment processing for your peace of mind
               </p>
             </div>
-            <div className="text-center p-6 bg-[#6B7C3C] rounded-2xl hover:bg-[#C9B99B] transition-colors duration-300 flex flex-col items-center justify-start h-full">
-              <div className="w-12 h-12 bg-[#3a3a3a] rounded-full flex items-center justify-center mx-auto mb-3">
-                <Calendar className="h-6 w-6 text-white" />
+            <div className="text-center p-4 sm:p-6 bg-[#6B7C3C] rounded-xl sm:rounded-2xl hover:bg-[#C9B99B] transition-colors duration-300 flex flex-col items-center justify-start h-full">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#3a3a3a] rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3">
+                <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
               </div>
-              <h3 className="text-lg mb-2 text-white">Easy Booking</h3>
-              <p className="text-sm text-white">
+              <h3 className="text-base sm:text-lg mb-1 sm:mb-2 text-white">Easy Booking</h3>
+              <p className="text-xs sm:text-sm text-white">
                 Simple and secure booking process with instant confirmation
               </p>
             </div>
-            <div className="text-center p-6 bg-[#6B7C3C] rounded-2xl hover:bg-[#C9B99B] transition-colors duration-300 flex flex-col items-center justify-start h-full">
-              <div className="w-12 h-12 bg-[#3a3a3a] rounded-full flex items-center justify-center mx-auto mb-3">
-                <Star className="h-6 w-6 text-white" />
+            <div className="text-center p-4 sm:p-6 bg-[#6B7C3C] rounded-xl sm:rounded-2xl hover:bg-[#C9B99B] transition-colors duration-300 flex flex-col items-center justify-start h-full">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#3a3a3a] rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3">
+                <Star className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
               </div>
-              <h3 className="text-lg mb-2 text-white">Quality Guaranteed</h3>
-              <p className="text-sm text-white">
+              <h3 className="text-base sm:text-lg mb-1 sm:mb-2 text-white">Quality Guaranteed</h3>
+              <p className="text-xs sm:text-sm text-white">
                 Every property meets our high standards for cleanliness and comfort
               </p>
             </div>
-            <div className="text-center p-6 bg-[#6B7C3C] rounded-2xl hover:bg-[#C9B99B] transition-colors duration-300 flex flex-col items-center justify-start h-full">
-              <div className="w-12 h-12 bg-[#3a3a3a] rounded-full flex items-center justify-center mx-auto mb-3">
-                <Clock className="h-6 w-6 text-white" />
+            <div className="text-center p-4 sm:p-6 bg-[#6B7C3C] rounded-xl sm:rounded-2xl hover:bg-[#C9B99B] transition-colors duration-300 flex flex-col items-center justify-start h-full">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#3a3a3a] rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3">
+                <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
               </div>
-              <h3 className="text-lg mb-2 text-white">24/7 Support</h3>
-              <p className="text-sm text-white">
+              <h3 className="text-base sm:text-lg mb-1 sm:mb-2 text-white">24/7 Support</h3>
+              <p className="text-xs sm:text-sm text-white">
                 Round-the-clock customer service to assist you anytime
               </p>
             </div>
-            <div className="text-center p-6 bg-[#6B7C3C] rounded-2xl hover:bg-[#C9B99B] transition-colors duration-300 flex flex-col items-center justify-start h-full">
-              <div className="w-12 h-12 bg-[#3a3a3a] rounded-full flex items-center justify-center mx-auto mb-3">
-                <DollarSign className="h-6 w-6 text-white" />
+            <div className="text-center p-4 sm:p-6 bg-[#6B7C3C] rounded-xl sm:rounded-2xl hover:bg-[#C9B99B] transition-colors duration-300 flex flex-col items-center justify-start h-full">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#3a3a3a] rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3">
+                <DollarSign className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
               </div>
-              <h3 className="text-lg mb-2 text-white">Best Price Match</h3>
-              <p className="text-sm text-white">
+              <h3 className="text-base sm:text-lg mb-1 sm:mb-2 text-white">Best Price Match</h3>
+              <p className="text-xs sm:text-sm text-white">
                 Competitive pricing with no hidden fees or surprise charges
               </p>
             </div>
