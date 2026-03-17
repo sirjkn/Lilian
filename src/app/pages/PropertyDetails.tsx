@@ -1,6 +1,27 @@
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate, useSearchParams, Link } from 'react-router';
+import { getProperty, getPropertyBookings, getPayments, createBooking, Property, Booking, Payment, Review, getPropertyReviews, createReview, checkPropertyAvailability, checkAirbnbAvailability, getNotificationSettings } from '../lib/api';
+import { useAuth } from '../context/AuthContext';
+import { Button } from '../components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Input } from '../components/ui/input';
+import { MapPin, Users, Bed, Bath, Star, Calendar, CheckCircle, XCircle, Wifi, Coffee, Tv, Wind, Phone, Check, Tag, AlertCircle, MessageSquare, MessageCircle, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { formatDateTime } from '../lib/dateUtils';
 import { SEO } from '../components/SEO';
 import { PropertyStructuredData, BreadcrumbStructuredData } from '../components/StructuredData';
+import { PhotoGallery } from '../components/PhotoGallery';
+
+// Helper function to format date only (YYYY-MM-DD to readable format)
+function formatDateOnly(dateString: string): string {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+// Helper function to get reviews (backward compatibility)
+function getReviews(propertyId: string): Promise<Review[]> {
+  return getPropertyReviews(propertyId);
+}
 
 // Helper function to convert video URLs to embed format
 function getVideoEmbedUrl(url: string): string | null {
