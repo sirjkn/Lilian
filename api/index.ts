@@ -1970,6 +1970,13 @@ You can now use this SMTP configuration for automated notifications.
         });
         
         console.log('🧪 M-Pesa settings loaded:', Object.keys(settings));
+        console.log('🧪 Settings values check:', {
+          hasConsumerKey: !!settings.mpesaConsumerKey,
+          consumerKeyLength: settings.mpesaConsumerKey?.length,
+          hasConsumerSecret: !!settings.mpesaConsumerSecret,
+          consumerSecretLength: settings.mpesaConsumerSecret?.length,
+          environment: settings.mpesaEnvironment
+        });
         
         // Validate
         if (!settings.mpesaConsumerKey || !settings.mpesaConsumerSecret) {
@@ -1989,7 +1996,11 @@ You can now use this SMTP configuration for automated notifications.
           : 'https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials';
         
         console.log('🧪 Token URL:', tokenUrl);
-        console.log('🧪 Auth header (first 20 chars):', auth.substring(0, 20) + '...');
+        console.log('🧪 Environment:', settings.mpesaEnvironment);
+        console.log('🧪 Consumer Key (first 10 chars):', settings.mpesaConsumerKey?.substring(0, 10) + '...');
+        console.log('🧪 Consumer Secret (first 10 chars):', settings.mpesaConsumerSecret?.substring(0, 10) + '...');
+        console.log('🧪 Auth header (full length):', auth.length, 'chars');
+        console.log('🧪 Auth header (first 30 chars):', auth.substring(0, 30) + '...');
           
         const tokenResponse = await fetch(tokenUrl, {
           method: 'GET',
@@ -2000,6 +2011,7 @@ You can now use this SMTP configuration for automated notifications.
         });
         
         console.log('🧪 Token response status:', tokenResponse.status);
+        console.log('🧪 Token response headers:', Object.fromEntries(tokenResponse.headers.entries()));
         
         // Get response body for better error messages
         const responseText = await tokenResponse.text();
