@@ -546,11 +546,24 @@ export function AdminSettings() {
       
       const data = await response.json();
       console.log('🧪 Response data:', data);
+      console.log('🧪 Error details:', JSON.stringify(data.details, null, 2));
+      console.log('🧪 HTTP Status:', data.status, data.statusText);
       
       if (data.success) {
         toast.success(`✅ ${data.message}`);
       } else {
-        toast.error(`❌ M-Pesa test failed: ${data.message}`);
+        // Show detailed error information
+        const errorInfo = [];
+        errorInfo.push(data.message);
+        if (data.details) {
+          errorInfo.push(`Details: ${JSON.stringify(data.details)}`);
+        }
+        if (data.status) {
+          errorInfo.push(`HTTP ${data.status}: ${data.statusText}`);
+        }
+        
+        console.error('❌ Full M-Pesa error:', errorInfo.join(' | '));
+        toast.error(`❌ M-Pesa test failed: ${data.message}`, { duration: 8000 });
       }
     } catch (error: any) {
       console.error('❌ M-Pesa test error:', error);
