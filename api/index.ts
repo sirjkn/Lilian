@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { query } from './config/db.js';
 import { hashPassword, verifyPassword, generateToken } from './utils/auth.js';
 
+// Skyway Suites API - M-Pesa Integration v1.1
 // Date formatting utilities
 function formatDateTimeEmail(date: string | Date): string {
   const d = new Date(date);
@@ -136,6 +137,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const { endpoint, action, id } = req.query;
+    
+    console.log('📍 API Request:', { endpoint, action, id, method: req.method });
 
     // ============================================
     // HEALTH CHECK ENDPOINTS
