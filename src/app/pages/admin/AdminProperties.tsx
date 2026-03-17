@@ -23,6 +23,7 @@ export function AdminProperties() {
   const [airbnbBookings, setAirbnbBookings] = useState<Array<{ checkIn: string; checkOut: string }>>([]);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [imageCategories, setImageCategories] = useState<{ [url: string]: string }>({}); // Track category for each image
+  const [activeCategory, setActiveCategory] = useState<'livingRoom' | 'bedroom' | 'kitchen' | 'dining' | 'amenities'>('livingRoom');
   const [isCompressing, setIsCompressing] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<{ current: number; total: number } | null>(null);
   const [formData, setFormData] = useState({
@@ -347,11 +348,19 @@ export function AdminProperties() {
         }
         
         const imageUrls = compressedImages.map(img => img.dataUrl);
+        
+        // Automatically assign the active category to newly uploaded images
+        const newCategories = { ...imageCategories };
+        imageUrls.forEach(url => {
+          newCategories[url] = activeCategory;
+        });
+        
         setUploadedImages([...uploadedImages, ...imageUrls]);
+        setImageCategories(newCategories);
         
         // Show compression results
         const totalSize = compressedImages.reduce((sum, img) => sum + img.size, 0);
-        toast.success(`✅ ${files.length} image(s) uploaded! Total: ${totalSize}KB`, {
+        toast.success(`✅ ${files.length} image(s) uploaded to ${getCategoryLabel(activeCategory)}! Total: ${totalSize}KB`, {
           id: 'compress-progress',
         });
       } catch (error) {
@@ -363,8 +372,22 @@ export function AdminProperties() {
     }
   };
 
-  const removeImage = (index: number) => {
-    setUploadedImages(uploadedImages.filter((_, i) => i !== index));
+  const getCategoryLabel = (category: string) => {
+    const labels: { [key: string]: string } = {
+      livingRoom: 'Living Room',
+      bedroom: 'Bedroom',
+      kitchen: 'Kitchen',
+      dining: 'Dining',
+      amenities: 'Amenities',
+    };
+    return labels[category] || category;
+  };
+
+  const removeImage = (imageUrl: string) => {
+    setUploadedImages(uploadedImages.filter(url => url !== imageUrl));
+    const newCategories = { ...imageCategories };
+    delete newCategories[imageUrl];
+    setImageCategories(newCategories);
   };
 
   const resetForm = () => {
@@ -382,6 +405,7 @@ export function AdminProperties() {
     });
     setUploadedImages([]);
     setImageCategories({});
+    setActiveCategory('livingRoom'); // Reset to default category
   };
 
   return (
@@ -641,16 +665,47 @@ export function AdminProperties() {
               
               {/* Multiple Image Upload */}
               <div className="border-t pt-4">
-                <label className="block text-sm mb-2 font-medium">Upload Property Images *</label>
-                <p className="text-xs text-gray-600 mb-3">
-                  Upload multiple images. Each will be automatically compressed to WebP format (max 50KB).
-                </p>
+                <label className="block text-sm mb-3 font-medium">Upload Property Images by Category *</label>
                 
-                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-3">
+                {/* Category Tabs */}
+                <div className="flex gap-2 mb-4 flex-wrap">
+                  {[
+                    { key: 'livingRoom', label: 'Living Room' },
+                    { key: 'bedroom', label: 'Bedroom' },
+                    { key: 'kitchen', label: 'Kitchen' },
+                    { key: 'dining', label: 'Dining' },
+                    { key: 'amenities', label: 'Amenities' },
+                  ].map(cat => (
+                    <button
+                      key={cat.key}
+                      type="button"
+                      onClick={() => setActiveCategory(cat.key as typeof activeCategory)}
+                      className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                        activeCategory === cat.key
+                          ? 'bg-[#6B7C3C] text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      {cat.label}
+                      {uploadedImages.filter(img => imageCategories[img] === cat.key).length > 0 && (
+                        <span className="ml-2 px-1.5 py-0.5 bg-white/20 rounded text-xs">
+                          {uploadedImages.filter(img => imageCategories[img] === cat.key).length}
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+                
+                {/* Upload Section */}
+                <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-4 mb-4">
+                  <p className="text-xs text-gray-600 mb-3">
+                    Currently uploading to: <strong className="text-[#6B7C3C]">{getCategoryLabel(activeCategory)}</strong>
+                  </p>
+                  
                   <label className="cursor-pointer">
-                    <div className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">
+                    <div className="flex items-center justify-center gap-2 px-4 py-3 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
                       <Upload className="h-4 w-4" />
-                      <span className="text-sm">{isCompressing ? 'Compressing...' : 'Choose Images'}</span>
+                      <span className="text-sm font-medium">{isCompressing ? 'Compressing...' : 'Choose Images'}</span>
                     </div>
                     <input
                       type="file"
@@ -661,11 +716,10 @@ export function AdminProperties() {
                       disabled={isCompressing}
                     />
                   </label>
-                  {uploadedImages.length > 0 && (
-                    <span className="text-sm text-gray-600">
-                      {uploadedImages.length} image{uploadedImages.length !== 1 ? 's' : ''} uploaded
-                    </span>
-                  )}
+                  
+                  <p className="text-xs text-gray-500 mt-2">
+                    Images will be automatically compressed to WebP format (max 50KB each)
+                  </p>
                 </div>
                 
                 {/* Upload Progress */}
@@ -673,7 +727,7 @@ export function AdminProperties() {
                   <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm font-medium text-blue-900">
-                        Uploading Images...
+                        Uploading to {getCategoryLabel(activeCategory)}...
                       </span>
                       <span className="text-sm text-blue-700">
                         {uploadProgress.current} / {uploadProgress.total}
@@ -688,42 +742,59 @@ export function AdminProperties() {
                   </div>
                 )}
 
-                {/* Image Previews */}
-                {uploadedImages.length > 0 && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {uploadedImages.map((imageUrl, index) => (
-                      <div key={index} className="relative border rounded-lg p-3 bg-gray-50">
-                        <div className="flex gap-3">
-                          <img
-                            src={imageUrl}
-                            alt={`Upload ${index + 1}`}
-                            className="w-24 h-24 object-cover rounded flex-shrink-0"
-                          />
-                          <div className="flex-1 min-w-0">
-                            <label className="block text-xs font-medium mb-1.5">Category</label>
-                            <select
-                              value={imageCategories[imageUrl] || ''}
-                              onChange={(e) => setImageCategories({ ...imageCategories, [imageUrl]: e.target.value })}
-                              className="w-full h-9 px-2 text-xs rounded-md border border-gray-300 bg-white"
+                {/* Image Previews for Active Category */}
+                {uploadedImages.filter(img => imageCategories[img] === activeCategory).length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-medium mb-2">{getCategoryLabel(activeCategory)} Photos</h4>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      {uploadedImages
+                        .filter(img => imageCategories[img] === activeCategory)
+                        .map((imageUrl, index) => (
+                          <div key={index} className="relative group">
+                            <img
+                              src={imageUrl}
+                              alt={`${getCategoryLabel(activeCategory)} ${index + 1}`}
+                              className="w-full h-24 object-cover rounded border-2 border-gray-200"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => removeImage(imageUrl)}
+                              className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
                             >
-                              <option value="">Select Category</option>
-                              <option value="livingRoom">Living Room</option>
-                              <option value="bedroom">Bedroom</option>
-                              <option value="kitchen">Kitchen</option>
-                              <option value="dining">Dining</option>
-                              <option value="amenities">Amenities</option>
-                            </select>
+                              <X className="h-3 w-3" />
+                            </button>
+                            <div className="absolute bottom-1 left-1 bg-black/70 text-white text-xs px-2 py-0.5 rounded">
+                              {getCategoryLabel(activeCategory)}
+                            </div>
                           </div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => removeImage(index)}
-                          className="absolute top-2 right-2 bg-red-600 text-white rounded-full p-1.5 hover:bg-red-700 transition-colors"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </div>
-                    ))}
+                        ))}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Total Images Summary */}
+                {uploadedImages.length > 0 && (
+                  <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <p className="text-sm font-medium text-green-900">
+                      Total Images: {uploadedImages.length}
+                    </p>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {[
+                        { key: 'livingRoom', label: 'Living Room' },
+                        { key: 'bedroom', label: 'Bedroom' },
+                        { key: 'kitchen', label: 'Kitchen' },
+                        { key: 'dining', label: 'Dining' },
+                        { key: 'amenities', label: 'Amenities' },
+                      ].map(cat => {
+                        const count = uploadedImages.filter(img => imageCategories[img] === cat.key).length;
+                        if (count === 0) return null;
+                        return (
+                          <span key={cat.key} className="text-xs px-2 py-1 bg-white rounded border border-green-300 text-green-800">
+                            {cat.label}: {count}
+                          </span>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
               </div>
@@ -881,7 +952,7 @@ export function AdminProperties() {
                         />
                         <button
                           type="button"
-                          onClick={() => removeImage(index)}
+                          onClick={() => removeImage(imageUrl)}
                           className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
                         >
                           <X className="h-3 w-3" />
