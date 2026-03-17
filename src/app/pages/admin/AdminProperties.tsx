@@ -39,6 +39,8 @@ export function AdminProperties() {
     category: '',
     image: '',
     amenities: '',
+    videoUrl1: '',
+    videoUrl2: '',
   });
 
   useEffect(() => {
@@ -178,6 +180,8 @@ export function AdminProperties() {
         icalUrl: '',
         airbnbCalendarUrl: '',
         calendarSyncEnabled: false,
+        videoUrl1: formData.videoUrl1,
+        videoUrl2: formData.videoUrl2,
       });
       
       console.log('✅ CREATE PROPERTY RESULT:', result);
@@ -229,6 +233,8 @@ export function AdminProperties() {
         category: property.category,
         image: property.image,
         amenities: property.amenities.join(', '),
+        videoUrl1: property.videoUrl1 || '',
+        videoUrl2: property.videoUrl2 || '',
       });
       // Load existing photos and categories for editing
       setUploadedImages(property.photos || []);
@@ -293,6 +299,8 @@ export function AdminProperties() {
           categorizedPhotos, // Categorized images
           amenities: formData.amenities.split(',').map(a => a.trim()),
           available: true,
+          videoUrl1: formData.videoUrl1,
+          videoUrl2: formData.videoUrl2,
         });
         toast.success('Property updated successfully!');
         setShowEditDialog(false);
@@ -449,6 +457,8 @@ export function AdminProperties() {
       category: '',
       image: '',
       amenities: '',
+      videoUrl1: '',
+      videoUrl2: '',
     });
     setUploadedImages([]);
     setImageCategories({});
@@ -857,6 +867,38 @@ export function AdminProperties() {
                   required
                 />
               </div>
+              
+              {/* Video URL Fields */}
+              <div className="border-t pt-4">
+                <h3 className="text-sm font-medium mb-3">Property Videos (Optional)</h3>
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm mb-2">Video URL 1 (YouTube, Vimeo, etc.)</label>
+                    <Input
+                      type="url"
+                      value={formData.videoUrl1}
+                      onChange={(e) => setFormData({ ...formData, videoUrl1: e.target.value })}
+                      placeholder="https://www.youtube.com/watch?v=..."
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Paste the full video URL (YouTube, Vimeo, or any video link)
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm mb-2">Video URL 2 (YouTube, Vimeo, etc.)</label>
+                    <Input
+                      type="url"
+                      value={formData.videoUrl2}
+                      onChange={(e) => setFormData({ ...formData, videoUrl2: e.target.value })}
+                      placeholder="https://www.youtube.com/watch?v=..."
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Paste the full video URL (YouTube, Vimeo, or any video link)
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4">
                 <Button type="submit" className="w-full sm:w-auto" disabled={isSubmitting}>
                   {isSubmitting ? 'Adding...' : 'Add Property'}
@@ -1127,6 +1169,38 @@ export function AdminProperties() {
                   required
                 />
               </div>
+              
+              {/* Video URL Fields */}
+              <div className="border-t pt-4">
+                <h3 className="text-sm font-medium mb-3">Property Videos (Optional)</h3>
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm mb-2">Video URL 1 (YouTube, Vimeo, etc.)</label>
+                    <Input
+                      type="url"
+                      value={formData.videoUrl1}
+                      onChange={(e) => setFormData({ ...formData, videoUrl1: e.target.value })}
+                      placeholder="https://www.youtube.com/watch?v=..."
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Paste the full video URL (YouTube, Vimeo, or any video link)
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm mb-2">Video URL 2 (YouTube, Vimeo, etc.)</label>
+                    <Input
+                      type="url"
+                      value={formData.videoUrl2}
+                      onChange={(e) => setFormData({ ...formData, videoUrl2: e.target.value })}
+                      placeholder="https://www.youtube.com/watch?v=..."
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Paste the full video URL (YouTube, Vimeo, or any video link)
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4">
                 <Button type="submit" className="w-full sm:w-auto" disabled={isUpdating}>
                   {isUpdating ? 'Updating...' : 'Update Property'}

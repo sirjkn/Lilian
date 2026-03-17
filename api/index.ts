@@ -85,6 +85,8 @@ function transformProperty(row: any) {
     airbnbCalendarUrl: row.airbnb_import_url,
     calendarSyncEnabled: row.calendar_sync_enabled,
     lastCalendarSync: row.last_calendar_sync,
+    videoUrl1: row.video_url1 || '',
+    videoUrl2: row.video_url2 || '',
     createdAt: row.created_at
   };
 }
@@ -582,11 +584,18 @@ You can now use this SMTP configuration for automated notifications.
           ADD COLUMN IF NOT EXISTS categorized_photos JSONB DEFAULT '{}'::jsonb
         `);
         
+        // Add video URL columns if they don't exist
+        await query(`
+          ALTER TABLE properties 
+          ADD COLUMN IF NOT EXISTS video_url1 TEXT DEFAULT '',
+          ADD COLUMN IF NOT EXISTS video_url2 TEXT DEFAULT ''
+        `);
+        
         console.log('✅ Migration completed successfully');
         
         return res.status(200).json({ 
           success: true, 
-          message: 'Migration completed successfully. The categorized_photos column has been added to the properties table.' 
+          message: 'Migration completed successfully. Video URL columns and categorized_photos column have been added to the properties table.' 
         });
       } catch (error) {
         console.error('❌ Migration failed:', error);
@@ -708,6 +717,14 @@ You can now use this SMTP configuration for automated notifications.
             updates.push(`calendar_sync_enabled = $${paramIndex++}`);
             values.push(fields.calendar_sync_enabled);
           }
+          if (fields.video_url1 !== undefined) {
+            updates.push(`video_url1 = $${paramIndex++}`);
+            values.push(fields.video_url1);
+          }
+          if (fields.video_url2 !== undefined) {
+            updates.push(`video_url2 = $${paramIndex++}`);
+            values.push(fields.video_url2);
+          }
           
           if (updates.length === 0) {
             return res.status(400).json({ error: 'No fields to update' });
@@ -741,14 +758,14 @@ You can now use this SMTP configuration for automated notifications.
 
       if (req.method === 'POST') {
         const { title, description, price, location, bedrooms, bathrooms, guests, category, image, photos, categorized_photos, amenities,
-          ical_export_url, airbnb_import_url, calendar_sync_enabled } = req.body;
+          ical_export_url, airbnb_import_url, calendar_sync_enabled, video_url1, video_url2 } = req.body;
         const result = await query(
           `INSERT INTO properties 
            (title, description, price, location, bedrooms, bathrooms, guests, category, image, photos, categorized_photos, amenities,
-            ical_export_url, airbnb_import_url, calendar_sync_enabled) 
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) RETURNING *`,
+            ical_export_url, airbnb_import_url, calendar_sync_enabled, video_url1, video_url2) 
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17) RETURNING *`,
           [title, description, price, location, bedrooms, bathrooms, guests, category, image, photos, categorized_photos, amenities,
-           ical_export_url, airbnb_import_url, calendar_sync_enabled]
+           ical_export_url, airbnb_import_url, calendar_sync_enabled, video_url1 || '', video_url2 || '']
         );
         return res.status(200).json(transformProperty(result.rows[0]));
       }

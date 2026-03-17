@@ -65,6 +65,8 @@ export interface Property {
   airbnbCalendarUrl?: string;
   calendarSyncEnabled?: boolean;
   lastCalendarSync?: string;
+  videoUrl1?: string; // First video URL (YouTube, Vimeo, etc.)
+  videoUrl2?: string; // Second video URL (YouTube, Vimeo, etc.)
   createdAt?: string;
 }
 
@@ -256,6 +258,8 @@ export async function createProperty(property: Omit<Property, 'id'>): Promise<Pr
     ical_export_url: property.icalUrl || '',
     airbnb_import_url: property.airbnbCalendarUrl || '',
     calendar_sync_enabled: property.calendarSyncEnabled || false,
+    video_url1: property.videoUrl1 || '',
+    video_url2: property.videoUrl2 || '',
   };
   
   console.log('🔍 API - Sending to backend:', apiProperty);
@@ -290,6 +294,8 @@ export async function updateProperty(id: string, property: Partial<Property>): P
   if (property.icalUrl !== undefined) apiProperty.ical_export_url = property.icalUrl;
   if (property.airbnbCalendarUrl !== undefined) apiProperty.airbnb_import_url = property.airbnbCalendarUrl;
   if (property.calendarSyncEnabled !== undefined) apiProperty.calendar_sync_enabled = property.calendarSyncEnabled;
+  if (property.videoUrl1 !== undefined) apiProperty.video_url1 = property.videoUrl1;
+  if (property.videoUrl2 !== undefined) apiProperty.video_url2 = property.videoUrl2;
   
   return await fetchWithAuth(`${API_BASE_URL}?endpoint=properties&id=${id}`, {
     method: 'PUT',

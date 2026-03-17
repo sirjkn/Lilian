@@ -1,30 +1,30 @@
-import { useEffect, useState } from 'react';
-import { useParams, Link, useNavigate, useSearchParams } from 'react-router';
-import { MapPin, Users, Bed, Bath, Wifi, Check, Tag, AlertCircle, Loader2, Star, MessageCircle, MessageSquare } from 'lucide-react';
-import { 
-  getProperty, 
-  Property, 
-  createBooking, 
-  checkPropertyAvailability,
-  checkAirbnbAvailability,
-  getPropertyBookings,
-  getPayments,
-  Booking,
-  getReviews,
-  createReview,
-  Review,
-  getNotificationSettings,
-  NotificationSettings
-} from '../lib/api';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { useAuth } from '../context/AuthContext';
-import { toast } from 'sonner';
-import { PhotoGallery } from '../components/PhotoGallery';
-import { formatDateOnly } from '../lib/dateUtils';
+import { formatDateTime } from '../lib/dateUtils';
 import { SEO } from '../components/SEO';
 import { PropertyStructuredData, BreadcrumbStructuredData } from '../components/StructuredData';
+
+// Helper function to convert video URLs to embed format
+function getVideoEmbedUrl(url: string): string | null {
+  if (!url) return null;
+  
+  // YouTube
+  const youtubeMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]+)/);
+  if (youtubeMatch) {
+    return `https://www.youtube.com/embed/${youtubeMatch[1]}`;
+  }
+  
+  // Vimeo
+  const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
+  if (vimeoMatch) {
+    return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+  }
+  
+  // If already an embed URL or direct video, return as is
+  if (url.includes('embed') || url.endsWith('.mp4') || url.endsWith('.webm')) {
+    return url;
+  }
+  
+  return null;
+}
 
 export function PropertyDetails() {
   const { id } = useParams<{ id: string }>();
@@ -423,6 +423,37 @@ export function PropertyDetails() {
                         photos={property.photos} 
                         categorizedPhotos={property.categorizedPhotos}
                       />
+                    </div>
+                  )}
+                  
+                  {/* Property Videos */}
+                  {(property.videoUrl1 || property.videoUrl2) && (
+                    <div className="mt-8">
+                      <h2 className="text-2xl mb-4">Property Videos</h2>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {property.videoUrl1 && getVideoEmbedUrl(property.videoUrl1) && (
+                          <div className="aspect-video">
+                            <iframe
+                              src={getVideoEmbedUrl(property.videoUrl1)!}
+                              className="w-full h-full rounded-lg"
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                              allowFullScreen
+                              title="Property Video 1"
+                            />
+                          </div>
+                        )}
+                        {property.videoUrl2 && getVideoEmbedUrl(property.videoUrl2) && (
+                          <div className="aspect-video">
+                            <iframe
+                              src={getVideoEmbedUrl(property.videoUrl2)!}
+                              className="w-full h-full rounded-lg"
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                              allowFullScreen
+                              title="Property Video 2"
+                            />
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
