@@ -1950,11 +1950,15 @@ You can now use this SMTP configuration for automated notifications.
       try {
         const { phoneNumber, amount } = req.body;
         
+        console.log('🧪 Test M-Pesa Request:', { phoneNumber, amount });
+        
         // Load settings
         const settingsResult = await query(
           `SELECT key, value FROM settings WHERE category = 'notifications' AND key LIKE 'mpesa%'`,
           []
         );
+        
+        console.log('🧪 Settings rows:', settingsResult.rows.length);
         
         const settings: any = {};
         settingsResult.rows.forEach((row: any) => {
@@ -1962,39 +1966,59 @@ You can now use this SMTP configuration for automated notifications.
           settings[camelKey] = row.value;
         });
         
+        console.log('🧪 M-Pesa settings loaded:', Object.keys(settings));
+        
         // Validate
         if (!settings.mpesaConsumerKey || !settings.mpesaConsumerSecret) {
+          console.error('❌ M-Pesa credentials missing');
           return res.status(400).json({
             success: false,
-            message: 'M-Pesa credentials not configured'
+            message: 'M-Pesa credentials not configured. Please configure in Payments → M-Pesa.'
           });
         }
+        
+        console.log('🧪 Attempting to get M-Pesa access token...');
         
         // Try to get access token
         const auth = Buffer.from(`${settings.mpesaConsumerKey}:${settings.mpesaConsumerSecret}`).toString('base64');
         const tokenUrl = settings.mpesaEnvironment === 'live'
           ? 'https://api.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials'
           : 'https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials';
+        
+        console.log('🧪 Token URL:', tokenUrl);
           
         const tokenResponse = await fetch(tokenUrl, {
           headers: { 'Authorization': `Basic ${auth}` }
         });
         
+        console.log('🧪 Token response status:', tokenResponse.status);
+        
+        if (!tokenResponse.ok) {
+          console.error('❌ Token request failed:', tokenResponse.status, tokenResponse.statusText);
+          return res.status(400).json({
+            success: false,
+            message: `M-Pesa API error: ${tokenResponse.statusText}`
+          });
+        }
+        
         const tokenData = await tokenResponse.json();
+        console.log('🧪 Token data:', tokenData);
         
         if (tokenData.access_token) {
+          console.log('✅ M-Pesa test successful!');
           return res.status(200).json({
             success: true,
             message: `M-Pesa credentials validated successfully! (${settings.mpesaEnvironment || 'sandbox'} mode)`
           });
         } else {
+          console.error('❌ No access token in response:', tokenData);
           return res.status(400).json({
             success: false,
-            message: tokenData.error_description || 'Invalid M-Pesa credentials'
+            message: tokenData.error_description || tokenData.errorMessage || 'Invalid M-Pesa credentials'
           });
         }
       } catch (error: any) {
-        console.error('Test M-Pesa error:', error);
+        console.error('❌ Test M-Pesa error:', error);
         return res.status(500).json({
           success: false,
           message: error.message || 'Failed to connect to M-Pesa API'

@@ -518,6 +518,8 @@ export function AdminSettings() {
     setTestingMpesa(true);
     
     try {
+      console.log('🧪 Testing M-Pesa with phone:', mpesaTestPhone);
+      
       const response = await fetch(`${API_BASE_URL}?endpoint=test-mpesa`, {
         method: 'POST',
         headers: { 
@@ -530,16 +532,29 @@ export function AdminSettings() {
         }),
       });
       
+      console.log('🧪 Response status:', response.status);
+      console.log('🧪 Response headers:', response.headers.get('content-type'));
+      
+      // Check if response is JSON
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        console.error('❌ Non-JSON response:', text);
+        toast.error('❌ Server error: Invalid response format');
+        return;
+      }
+      
       const data = await response.json();
+      console.log('🧪 Response data:', data);
       
       if (data.success) {
-        toast.success('✅ M-Pesa credentials validated successfully!');
+        toast.success(`✅ ${data.message}`);
       } else {
         toast.error(`❌ M-Pesa test failed: ${data.message}`);
       }
-    } catch (error) {
-      console.error('M-Pesa test error:', error);
-      toast.error('❌ M-Pesa test failed. Check credentials and try again.');
+    } catch (error: any) {
+      console.error('❌ M-Pesa test error:', error);
+      toast.error(`❌ M-Pesa test failed: ${error.message || 'Unknown error'}`);
     } finally {
       setTestingMpesa(false);
     }
@@ -554,6 +569,8 @@ export function AdminSettings() {
     setTestingPaypal(true);
     
     try {
+      console.log('🧪 Testing PayPal with Client ID:', paypalClientId.substring(0, 10) + '...');
+      
       const response = await fetch(`${API_BASE_URL}?endpoint=test-paypal`, {
         method: 'POST',
         headers: { 
@@ -566,16 +583,28 @@ export function AdminSettings() {
         }),
       });
       
+      console.log('🧪 Response status:', response.status);
+      
+      // Check if response is JSON
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        console.error('❌ Non-JSON response:', text);
+        toast.error('❌ Server error: Invalid response format');
+        return;
+      }
+      
       const data = await response.json();
+      console.log('🧪 Response data:', data);
       
       if (data.success) {
-        toast.success('✅ PayPal credentials validated successfully!');
+        toast.success(`✅ ${data.message}`);
       } else {
         toast.error(`❌ PayPal validation failed: ${data.message}`);
       }
-    } catch (error) {
-      console.error('PayPal test error:', error);
-      toast.error('❌ PayPal test failed. Check credentials and try again.');
+    } catch (error: any) {
+      console.error('❌ PayPal test error:', error);
+      toast.error(`❌ PayPal test failed: ${error.message || 'Unknown error'}`);
     } finally {
       setTestingPaypal(false);
     }
