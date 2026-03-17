@@ -26,6 +26,8 @@ export function AdminProperties() {
   const [activeCategory, setActiveCategory] = useState<'livingRoom' | 'bedroom' | 'kitchen' | 'dining' | 'amenities'>('livingRoom');
   const [isCompressing, setIsCompressing] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<{ current: number; total: number } | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -116,6 +118,8 @@ export function AdminProperties() {
       return;
     }
     
+    setIsSubmitting(true);
+    
     try {
       // Use the first uploaded image as the main property image
       const mainImage = uploadedImages[0];
@@ -193,6 +197,8 @@ export function AdminProperties() {
       // Show detailed error in alert AND toast
       alert(`❌ FAILED TO ADD PROPERTY\n\n${errorMessage}\n\nCheck console (F12) for full details.`);
       toast.error(`Failed to add property: ${errorMessage}`);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -249,6 +255,7 @@ export function AdminProperties() {
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (editingProperty) {
+      setIsUpdating(true);
       try {
         // Use the first uploaded image if new images were uploaded, otherwise keep existing
         const mainImage = uploadedImages.length > 0 ? uploadedImages[0] : formData.image;
@@ -293,6 +300,8 @@ export function AdminProperties() {
         loadProperties();
       } catch (error) {
         toast.error('Failed to update property');
+      } finally {
+        setIsUpdating(false);
       }
     }
   };
@@ -444,6 +453,8 @@ export function AdminProperties() {
     setUploadedImages([]);
     setImageCategories({});
     setActiveCategory('livingRoom'); // Reset to default category
+    setIsSubmitting(false);
+    setIsUpdating(false);
   };
 
   return (
@@ -847,8 +858,10 @@ export function AdminProperties() {
                 />
               </div>
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4">
-                <Button type="submit" className="w-full sm:w-auto">Add Property</Button>
-                <Button type="button" variant="outline" onClick={() => setShowAddDialog(false)} className="w-full sm:w-auto">
+                <Button type="submit" className="w-full sm:w-auto" disabled={isSubmitting}>
+                  {isSubmitting ? 'Adding...' : 'Add Property'}
+                </Button>
+                <Button type="button" variant="outline" onClick={() => setShowAddDialog(false)} className="w-full sm:w-auto" disabled={isSubmitting}>
                   Cancel
                 </Button>
               </div>
@@ -1115,8 +1128,10 @@ export function AdminProperties() {
                 />
               </div>
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4">
-                <Button type="submit" className="w-full sm:w-auto">Update Property</Button>
-                <Button type="button" variant="outline" onClick={() => setShowEditDialog(false)} className="w-full sm:w-auto">
+                <Button type="submit" className="w-full sm:w-auto" disabled={isUpdating}>
+                  {isUpdating ? 'Updating...' : 'Update Property'}
+                </Button>
+                <Button type="button" variant="outline" onClick={() => setShowEditDialog(false)} className="w-full sm:w-auto" disabled={isUpdating}>
                   Cancel
                 </Button>
               </div>
