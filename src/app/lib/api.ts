@@ -80,6 +80,7 @@ export interface Booking {
   totalPrice: number;
   amountPaid?: number;
   status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
+  approved: boolean; // Admin approval status
   createdAt: string;
 }
 
@@ -521,6 +522,13 @@ export async function updateBooking(id: string, booking: Partial<Booking>): Prom
 export async function deleteBooking(id: string): Promise<void> {
   return await fetchWithAuth(`${API_BASE_URL}?endpoint=bookings&id=${id}`, {
     method: 'DELETE',
+  });
+}
+
+// Approve a booking (admin only)
+export async function approveBooking(id: string): Promise<Booking> {
+  return await fetchWithAuth(`${API_BASE_URL}?endpoint=bookings&id=${id}&action=approve`, {
+    method: 'POST',
   });
 }
 

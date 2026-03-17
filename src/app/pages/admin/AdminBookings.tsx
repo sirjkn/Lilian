@@ -1,7 +1,7 @@
+import { getBookings, Booking, getProperties, getCustomers, getPayments, Payment, createPayment, deleteBooking, createBooking, approveBooking } from '../../lib/api';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
-import { Plus, Home, Users, Calendar, DollarSign, Trash2, Tag } from 'lucide-react';
-import { getBookings, Booking, getProperties, getCustomers, getPayments, Payment, createPayment, deleteBooking, createBooking } from '../../lib/api';
+import { Plus, Home, Users, Calendar, DollarSign, Trash2, Tag, CheckCircle } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
@@ -228,6 +228,18 @@ export function AdminBookings() {
     }
   };
 
+  const handleApproveBooking = async (id: string) => {
+    if (confirm('Approve this booking? The customer will receive an email with payment instructions.')) {
+      try {
+        await approveBooking(id);
+        toast.success('Booking approved! Customer notified via email.');
+        loadBookings();
+      } catch (error) {
+        toast.error('Failed to approve booking');
+      }
+    }
+  };
+
   const handleCreateBooking = async () => {
     // Validate all required fields
     if (!formData.propertyId) {
@@ -439,6 +451,17 @@ export function AdminBookings() {
                     </td>
                     <td className="py-2 px-3">
                       <div className="flex gap-2">
+                        {!booking.approved && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
+                            onClick={() => handleApproveBooking(booking.id)}
+                          >
+                            <CheckCircle className="h-3 w-3 mr-1" />
+                            Approve
+                          </Button>
+                        )}
                         {(getBookingStatus(booking) === 'pending payment' || getBookingStatus(booking) === 'partial payment') && (
                           <Button
                             variant="outline"

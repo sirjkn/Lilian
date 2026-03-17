@@ -103,6 +103,7 @@ function transformBooking(row: any) {
     totalPrice: parseFloat(row.total_price),
     amountPaid: row.amount_paid ? parseFloat(row.amount_paid) : 0,
     status: row.status,
+    approved: row.approved || false,
     createdAt: row.created_at
   };
 }
@@ -591,11 +592,17 @@ You can now use this SMTP configuration for automated notifications.
           ADD COLUMN IF NOT EXISTS video_url2 TEXT DEFAULT ''
         `);
         
+        // Add approved column to bookings table if it doesn't exist
+        await query(`
+          ALTER TABLE bookings 
+          ADD COLUMN IF NOT EXISTS approved BOOLEAN DEFAULT FALSE
+        `);
+        
         console.log('✅ Migration completed successfully');
         
         return res.status(200).json({ 
           success: true, 
-          message: 'Migration completed successfully. Video URL columns and categorized_photos column have been added to the properties table.' 
+          message: 'Migration completed successfully. Video URL columns, approved column, and categorized_photos column have been added.' 
         });
       } catch (error) {
         console.error('❌ Migration failed:', error);
@@ -790,6 +797,138 @@ You can now use this SMTP configuration for automated notifications.
         if (req.method === 'DELETE') {
           await query('DELETE FROM bookings WHERE id = $1', [id]);
           return res.status(200).json({ message: 'Booking deleted' });
+        }
+        
+        // Handle booking approval (action=approve)
+        if (req.method === 'POST' && action === 'approve') {
+          console.log('📋 Approving booking:', id);
+          
+          // Update booking to approved
+          const result = await query(
+            'UPDATE bookings SET approved = TRUE WHERE id = $1 RETURNING *',
+            [id]
+          );
+          
+          if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Booking not found' });
+          }
+          
+          const booking = transformBooking(result.rows[0]);
+          
+          // Send email to customer with payment instructions
+          try {
+            // Get customer details
+            const customerResult = await query('SELECT name, email FROM users WHERE id = $1', [booking.customerId]);
+            const customer = customerResult.rows[0];
+            
+            // Get property details
+            const propertyResult = await query('SELECT title FROM properties WHERE id = $1', [booking.propertyId]);
+            const property = propertyResult.rows[0];
+            
+            // Get notification settings
+            const settingsResult = await query('SELECT key, value FROM settings WHERE key IN ($1, $2, $3, $4, $5, $6, $7)', [
+              'smtp_host', 'smtp_port', 'smtp_username', 'smtp_password', 'smtp_secure', 'email_from_address', 'email_from_name'
+            ]);
+            
+            const settings: any = {};
+            settingsResult.rows.forEach((row: any) => {
+              const camelKey = row.key.replace(/_([a-z])/g, (g: string) => g[1].toUpperCase());
+              settings[camelKey] = row.value;
+            });
+            
+            if (settings.smtpHost && customer?.email) {
+              const nodemailer = await import('nodemailer');
+              
+              const port = parseInt(settings.smtpPort || '587');
+              const useSSL = settings.smtpSecure === 'true';
+              
+              const transporter = nodemailer.default.createTransporter({
+                host: settings.smtpHost,
+                port: port,
+                secure: useSSL,
+                auth: {
+                  user: settings.smtpUsername,
+                  pass: settings.smtpPassword,
+                },
+              });
+              
+              const company = getCompanyDetails();
+              const appUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000';
+              const paymentUrl = `${appUrl}/customer-profile?tab=bookings&bookingId=${booking.id}`;
+              
+              const emailHtml = `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background-color: #6B7C3C; color: white; padding: 20px; text-align: center; }
+    .content { background-color: #f9f9f9; padding: 30px; }
+    .button { display: inline-block; padding: 12px 30px; margin: 10px; background-color: #6B7C3C; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; }
+    .button.mpesa { background-color: #00A86B; }
+    .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🎉 Booking Approved!</h1>
+    </div>
+    <div class="content">
+      <p>Dear ${customer.name},</p>
+      
+      <p>Great news! Your booking has been approved by our admin team.</p>
+      
+      <h3>Booking Details:</h3>
+      <ul>
+        <li><strong>Property:</strong> ${property.title}</li>
+        <li><strong>Check-in:</strong> ${formatDateTimeEmail(booking.checkIn)}</li>
+        <li><strong>Check-out:</strong> ${formatDateTimeEmail(booking.checkOut)}</li>
+        <li><strong>Guests:</strong> ${booking.guests}</li>
+        <li><strong>Total Amount:</strong> KES ${booking.totalPrice.toLocaleString()}</li>
+      </ul>
+      
+      <h3>Next Step: Complete Payment</h3>
+      <p>To confirm your booking, please complete the payment using one of the following methods:</p>
+      
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="${paymentUrl}" class="button">💳 Pay with Card</a>
+        <a href="${paymentUrl}" class="button mpesa">📱 Pay with Mpesa</a>
+      </div>
+      
+      <p><strong>Important:</strong> Your booking will be confirmed once payment is received.</p>
+      
+      <p>If you have any questions, please don't hesitate to contact us.</p>
+      
+      <p>Best regards,<br>
+      ${company.companyName} Team</p>
+    </div>
+    <div class="footer">
+      <p>${company.companyName}<br>
+      ${company.companyEmail} | ${company.companyPhone}<br>
+      ${company.companyLocation}</p>
+    </div>
+  </div>
+</body>
+</html>
+              `;
+              
+              await transporter.sendMail({
+                from: `"${settings.emailFromName || company.companyName}" <${settings.emailFromAddress}>`,
+                to: customer.email,
+                subject: `Booking Approved - Complete Payment for ${property.title}`,
+                html: emailHtml,
+              });
+              
+              console.log('✅ Approval email sent to customer');
+            }
+          } catch (emailError) {
+            console.error('❌ Failed to send approval email:', emailError);
+            // Don't fail the request if email fails
+          }
+          
+          return res.status(200).json(booking);
         }
       }
 
