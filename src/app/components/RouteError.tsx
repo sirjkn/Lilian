@@ -20,12 +20,18 @@ export function RouteError() {
             itself by refreshing or going back home.
           </p>
           
-          {process.env.NODE_ENV === 'development' && error && (
-            <div className="mb-6 p-4 bg-gray-100 rounded-lg text-left">
+          {error && (
+            <div className="mb-6 p-4 bg-gray-100 rounded-lg text-left max-w-full overflow-auto">
               <p className="text-xs font-semibold text-gray-800 mb-1">Error Details:</p>
               <p className="text-xs text-gray-700 font-mono break-all">
                 {error.toString()}
               </p>
+              {error.stack && (
+                <details className="mt-2">
+                  <summary className="text-xs font-semibold text-gray-800 cursor-pointer">Stack Trace</summary>
+                  <pre className="text-xs text-gray-600 mt-1 whitespace-pre-wrap break-all">{error.stack}</pre>
+                </details>
+              )}
             </div>
           )}
         </div>

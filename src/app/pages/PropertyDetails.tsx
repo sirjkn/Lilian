@@ -74,7 +74,14 @@ export function PropertyDetails() {
   const [checkOut, setCheckOut] = useState(searchParams.get('checkOut') || '');
   const [guests, setGuests] = useState(searchParams.get('guests') || '1');
   
-  const { user } = useAuth();
+  let user;
+  try {
+    const authContext = useAuth();
+    user = authContext.user;
+  } catch (err) {
+    console.error('Auth context error:', err);
+    user = null;
+  }
 
   useEffect(() => {
     async function fetchProperty() {

@@ -945,13 +945,16 @@ export async function getReviewByBooking(bookingId: string): Promise<Review | nu
   } catch (error) {
     if (error instanceof Error && (error.message === 'PREVIEW_MODE' || error.message === 'API_NOT_DEPLOYED')) {
       return null;
-    }
-    if (isProduction()) {
-      console.error('Failed to fetch review:', error);
+    } else {
+      console.error('Error fetching review by booking:', error);
+      throw error;
     }
     return null;
   }
 }
+
+// Alias for getReviews to match component expectations
+export const getPropertyReviews = getReviews;
 
 export async function createReview(review: Omit<Review, 'id' | 'createdAt' | 'customerName'>): Promise<Review> {
   return await fetchWithAuth(`${API_BASE_URL}?endpoint=reviews`, {
