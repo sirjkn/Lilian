@@ -99,6 +99,7 @@ export function MyBookings() {
     setSelectedBooking(booking);
     setPaymentMethod(null);
     setMpesaPhone('');
+    setCheckoutRequestId(null); // Reset checkout request ID
     setShowPaymentDialog(true);
   };
 
