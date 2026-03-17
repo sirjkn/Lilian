@@ -231,11 +231,22 @@ export function AdminBookings() {
   const handleApproveBooking = async (id: string) => {
     if (confirm('Approve this booking? The customer will receive an email with payment instructions.')) {
       try {
+        console.log('🔍 APPROVE BOOKING - Starting for ID:', id);
         await approveBooking(id);
+        console.log('✅ APPROVE BOOKING - Success');
         toast.success('Booking approved! Customer notified via email.');
         loadBookings();
       } catch (error) {
-        toast.error('Failed to approve booking');
+        console.error('❌ APPROVE BOOKING ERROR - FULL DETAILS:', error);
+        console.error('❌ ERROR TYPE:', error instanceof Error ? 'Error Object' : typeof error);
+        console.error('❌ ERROR MESSAGE:', error instanceof Error ? error.message : String(error));
+        console.error('❌ ERROR STACK:', error instanceof Error ? error.stack : 'No stack trace');
+        
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        
+        // Show detailed error in alert AND toast
+        alert(`❌ FAILED TO APPROVE BOOKING\n\n${errorMessage}\n\nCheck console (F12) for full details.`);
+        toast.error(`Failed to approve booking: ${errorMessage}`);
       }
     }
   };
