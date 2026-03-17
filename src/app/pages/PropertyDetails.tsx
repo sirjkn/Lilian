@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate, useSearchParams } from 'react-router';
-import { MapPin, Users, Bed, Bath, Wifi, Check, Tag, AlertCircle, Loader2, Star, MessageCircle } from 'lucide-react';
+import { MapPin, Users, Bed, Bath, Wifi, Check, Tag, AlertCircle, Loader2, Star, MessageCircle, MessageSquare } from 'lucide-react';
 import { 
   getProperty, 
   Property, 
@@ -96,6 +96,10 @@ export function PropertyDetails() {
               break;
             }
           }
+          
+          // Fetch reviews for this property
+          const propertyReviews = await getReviews(id);
+          setReviews(propertyReviews);
         }
       } catch (err) {
         console.error('Failed to fetch property:', err);
@@ -337,44 +341,12 @@ export function PropertyDetails() {
               </div>
             </div>
 
-            <div className="mb-8 pb-8 border-b">
-              <h2 className="text-2xl mb-4">About this place</h2>
-              <p className="text-gray-600">{property.description}</p>
-            </div>
-
-            <div>
-              <h2 className="text-2xl mb-4">Amenities</h2>
-              <div className="grid grid-cols-2 gap-4 mb-8">
-                {property.amenities && property.amenities.length > 0 ? (
-                  property.amenities.map((amenity) => (
-                    <div key={amenity} className="flex items-center gap-2">
-                      <Check className="h-5 w-5 text-green-600" />
-                      <span>{amenity}</span>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-gray-500 col-span-2">No amenities listed</p>
-                )}
-              </div>
-
-              {/* Photo Gallery */}
-              {((property.categorizedPhotos && 
-                (property.categorizedPhotos.livingRoom?.length || 
-                 property.categorizedPhotos.bedroom?.length || 
-                 property.categorizedPhotos.kitchen?.length || 
-                 property.categorizedPhotos.dining?.length || 
-                 property.categorizedPhotos.amenities?.length)) || 
-                (property.photos && property.photos.length > 0)) && (
-                <div className="mt-8">
-                  <h2 className="text-2xl mb-4">Property Photos</h2>
-                  <PhotoGallery 
-                    photos={property.photos} 
-                    categorizedPhotos={property.categorizedPhotos}
-                  />
-                </div>
-              )}
-            </div>
-          </div>
+            {/* Tab Navigation */}
+            <div className="mb-6 border-b">
+              <div className="flex gap-6">
+                <button
+                  onClick={() => setActiveTab('overview')}
+                  className={`pb-3 px-1 border-b-2 transition-colors ${\n                    activeTab === 'overview'\n                      ? 'border-[#6B7C3C] text-[#6B7C3C] font-semibold'\n                      : 'border-transparent text-gray-600 hover:text-gray-900'\n                  }`}\n                >\n                  Overview\n                </button>\n                <button\n                  onClick={() => setActiveTab('reviews')}\n                  className={`pb-3 px-1 border-b-2 transition-colors flex items-center gap-2 ${\n                    activeTab === 'reviews'\n                      ? 'border-[#6B7C3C] text-[#6B7C3C] font-semibold'\n                      : 'border-transparent text-gray-600 hover:text-gray-900'\n                  }`}\n                >\n                  <MessageSquare className="h-4 w-4" />\n                  Reviews ({reviews.length})\n                </button>\n              </div>\n            </div>\n\n            {/* Tab Content */}\n            {activeTab === 'overview' ? (\n              <>\n                <div className="mb-8 pb-8 border-b">\n                  <h2 className="text-2xl mb-4">About this place</h2>\n                  <p className="text-gray-600">{property.description}</p>\n                </div>\n\n                <div>\n                  <h2 className="text-2xl mb-4">Amenities</h2>\n                  <div className="grid grid-cols-2 gap-4 mb-8">\n                    {property.amenities && property.amenities.length > 0 ? (\n                      property.amenities.map((amenity) => (\n                        <div key={amenity} className="flex items-center gap-2">\n                          <Check className="h-5 w-5 text-green-600" />\n                          <span>{amenity}</span>\n                        </div>\n                      ))\n                    ) : (\n                      <p className="text-gray-500 col-span-2">No amenities listed</p>\n                    )}\n                  </div>\n\n                  {/* Photo Gallery */}\n                  {((property.categorizedPhotos && \n                    (property.categorizedPhotos.livingRoom?.length || \n                     property.categorizedPhotos.bedroom?.length || \n                     property.categorizedPhotos.kitchen?.length || \n                     property.categorizedPhotos.dining?.length || \n                     property.categorizedPhotos.amenities?.length)) || \n                    (property.photos && property.photos.length > 0)) && (\n                    <div className="mt-8">\n                      <h2 className="text-2xl mb-4">Property Photos</h2>\n                      <PhotoGallery \n                        photos={property.photos} \n                        categorizedPhotos={property.categorizedPhotos}\n                      />\n                    </div>\n                  )}\n                </div>\n              </>\n            ) : (\n              <div>\n                <h2 className="text-2xl mb-6">Guest Reviews</h2>\n                \n                {/* Average Rating */}\n                {reviews.length > 0 && (\n                  <div className="mb-8 pb-6 border-b">\n                    <div className="flex items-center gap-4">\n                      <div className="text-4xl font-bold text-[#6B7C3C]">\n                        {(reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)}\n                      </div>\n                      <div>\n                        <div className="flex items-center gap-1 mb-1">\n                          {[1, 2, 3, 4, 5].map((star) => (\n                            <Star\n                              key={star}\n                              className={`h-5 w-5 ${\n                                star <= Math.round(reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length)\n                                  ? 'fill-[#6B7C3C] text-[#6B7C3C]'\n                                  : 'text-gray-300'\n                              }`}\n                            />\n                          ))}\n                        </div>\n                        <p className="text-sm text-gray-600">\n                          Based on {reviews.length} review{reviews.length !== 1 ? 's' : ''}\n                        </p>\n                      </div>\n                    </div>\n                  </div>\n                )}\n\n                {/* Reviews List */}\n                {reviews.length > 0 ? (\n                  <div className="space-y-6">\n                    {reviews.map((review) => (\n                      <div key={review.id} className="pb-6 border-b last:border-b-0">\n                        <div className="flex items-start gap-4">\n                          <div className="flex-shrink-0 w-10 h-10 bg-[#6B7C3C] text-white rounded-full flex items-center justify-center font-semibold">\n                            {review.customerName ? review.customerName.charAt(0).toUpperCase() : 'G'}\n                          </div>\n                          <div className="flex-1">\n                            <div className="flex items-center justify-between mb-2">\n                              <div>\n                                <p className="font-semibold text-gray-900">\n                                  {review.customerName || 'Guest'}\n                                </p>\n                                <p className="text-xs text-gray-500">\n                                  {new Date(review.createdAt).toLocaleDateString('en-US', {\n                                    year: 'numeric',\n                                    month: 'long',\n                                    day: 'numeric'\n                                  })}\n                                </p>\n                              </div>\n                              <div className="flex items-center gap-1">\n                                {[1, 2, 3, 4, 5].map((star) => (\n                                  <Star\n                                    key={star}\n                                    className={`h-4 w-4 ${\n                                      star <= review.rating\n                                        ? 'fill-[#6B7C3C] text-[#6B7C3C]'\n                                        : 'text-gray-300'\n                                    }`}\n                                  />\n                                ))}\n                              </div>\n                            </div>\n                            {review.comment && (\n                              <p className="text-gray-700 text-sm leading-relaxed">\n                                {review.comment}\n                              </p>\n                            )}\n                          </div>\n                        </div>\n                      </div>\n                    ))}\n                  </div>\n                ) : (\n                  <div className="text-center py-12 bg-gray-50 rounded-lg">\n                    <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />\n                    <h3 className="text-lg font-semibold text-gray-900 mb-2">\n                      No reviews yet\n                    </h3>\n                    <p className="text-gray-600">\n                      Be the first to leave a review after your stay!\n                    </p>\n                  </div>\n                )}\n              </div>\n            )}\n          </div>
 
           {/* Booking Card */}
           <div>
@@ -554,6 +526,22 @@ export function PropertyDetails() {
                       Login to Book
                     </Button>
                   )}
+                  
+                  {/* WhatsApp Enquiry Button */}
+                  <Button 
+                    variant="outline"
+                    className="w-full border-green-600 text-green-600 hover:bg-green-50"
+                    onClick={() => {
+                      const message = `Hi! I'm interested in ${property.title}${checkIn && checkOut ? `. Dates: ${formatDateOnly(checkIn)} to ${formatDateOnly(checkOut)}` : ''}${guests ? `. Guests: ${guests}` : ''}. Can you provide more information?`;
+                      const whatsappNumber = '+254712345678'; // This will come from settings
+                      const whatsappUrl = `https://wa.me/${whatsappNumber.replace(/\+/g, '')}?text=${encodeURIComponent(message)}`;
+                      window.open(whatsappUrl, '_blank');
+                    }}
+                  >
+                    <MessageCircle className="h-4 w-4 mr-2" />
+                    Enquire Via WhatsApp
+                  </Button>
+                  
                   <p className="text-sm text-gray-600 text-center">
                     You won't be charged yet
                   </p>

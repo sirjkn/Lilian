@@ -103,7 +103,7 @@ export function PhotoGallery({ photos, categorizedPhotos }: PhotoGalleryProps) {
                 className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
               />
               {/* Category Badge */}
-              <div className="absolute top-2 left-2 bg-[#6B7C3C] text-white text-xs px-2 py-1 rounded-md backdrop-blur-sm font-medium">
+              <div className="absolute top-2 left-2 bg-orange-500 text-white text-xs px-2 py-1 rounded-md backdrop-blur-sm font-medium">
                 {photo.category}
               </div>
             </div>
