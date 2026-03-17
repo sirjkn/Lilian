@@ -579,10 +579,16 @@ export function AdminSettings() {
       return;
     }
     
+    if (!paypalClientSecret) {
+      toast.error('Please enter PayPal Client Secret first');
+      return;
+    }
+    
     setTestingPaypal(true);
     
     try {
       console.log('🧪 Testing PayPal with Client ID:', paypalClientId.substring(0, 10) + '...');
+      console.log('🧪 Testing PayPal with Client Secret:', paypalClientSecret.substring(0, 10) + '...');
       
       const response = await fetch(`${API_BASE_URL}?endpoint=test-paypal`, {
         method: 'POST',
@@ -592,6 +598,7 @@ export function AdminSettings() {
         },
         body: JSON.stringify({
           clientId: paypalClientId,
+          clientSecret: paypalClientSecret,
           environment: paypalEnvironment,
         }),
       });

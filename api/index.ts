@@ -2087,29 +2087,91 @@ You can now use this SMTP configuration for automated notifications.
     // Test PayPal
     if (endpoint === 'test-paypal' && req.method === 'POST') {
       try {
-        const { clientId, environment } = req.body;
+        const { clientId, clientSecret, environment } = req.body;
         
-        if (!clientId) {
+        console.log('🧪 Testing PayPal credentials...');
+        console.log('🧪 Environment:', environment);
+        console.log('🧪 Client ID (first 10 chars):', clientId?.substring(0, 10) + '...');
+        console.log('🧪 Client Secret (first 10 chars):', clientSecret?.substring(0, 10) + '...');
+        
+        if (!clientId || !clientSecret) {
           return res.status(400).json({
             success: false,
-            message: 'PayPal Client ID not provided'
+            message: 'PayPal Client ID and Secret are required'
           });
         }
         
-        // Simple validation (Client ID format check)
-        if (clientId.startsWith('A') && clientId.length > 50) {
+        // Get OAuth token from PayPal
+        const auth = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
+        const tokenUrl = environment === 'live'
+          ? 'https://api-m.paypal.com/v1/oauth2/token'
+          : 'https://api-m.sandbox.paypal.com/v1/oauth2/token';
+        
+        console.log('🧪 Token URL:', tokenUrl);
+        console.log('🧪 Auth header length:', auth.length, 'chars');
+        
+        const tokenResponse = await fetch(tokenUrl, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Basic ${auth}`,
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: 'grant_type=client_credentials'
+        });
+        
+        console.log('🧪 PayPal response status:', tokenResponse.status);
+        console.log('🧪 PayPal response headers:', Object.fromEntries(tokenResponse.headers.entries()));
+        
+        const responseText = await tokenResponse.text();
+        console.log('🧪 PayPal raw response:', responseText.substring(0, 200));
+        
+        if (!tokenResponse.ok) {
+          let errorMessage = 'PayPal API error';
+          try {
+            const errorData = JSON.parse(responseText);
+            errorMessage = errorData.error_description || errorData.message || errorMessage;
+            console.error('❌ PayPal error data:', errorData);
+          } catch (parseError) {
+            console.error('❌ Could not parse PayPal error response');
+          }
+          
+          return res.status(400).json({
+            success: false,
+            message: `PayPal validation failed: ${errorMessage}`
+          });
+        }
+        
+        // Parse success response
+        let tokenData;
+        try {
+          tokenData = JSON.parse(responseText);
+        } catch (parseError) {
+          console.error('❌ Could not parse PayPal success response');
+          return res.status(500).json({
+            success: false,
+            message: 'Invalid response from PayPal'
+          });
+        }
+        
+        if (tokenData.access_token) {
+          console.log('✅ PayPal OAuth token retrieved successfully');
+          console.log('🧪 Token type:', tokenData.token_type);
+          console.log('🧪 Expires in:', tokenData.expires_in, 'seconds');
+          
           return res.status(200).json({
             success: true,
-            message: `PayPal Client ID validated (${environment || 'sandbox'} mode)`
+            message: `✅ PayPal credentials validated successfully! (${environment || 'sandbox'} mode)`,
+            tokenType: tokenData.token_type,
+            expiresIn: tokenData.expires_in
           });
         } else {
           return res.status(400).json({
             success: false,
-            message: 'Invalid PayPal Client ID format'
+            message: 'PayPal did not return an access token'
           });
         }
       } catch (error: any) {
-        console.error('Test PayPal error:', error);
+        console.error('❌ Test PayPal error:', error);
         return res.status(500).json({
           success: false,
           message: error.message || 'Failed to validate PayPal'
