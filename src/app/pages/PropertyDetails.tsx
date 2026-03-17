@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate, useSearchParams } from 'react-router';
-import { MapPin, Users, Bed, Bath, Wifi, Check, Tag, AlertCircle, Loader2 } from 'lucide-react';
+import { MapPin, Users, Bed, Bath, Wifi, Check, Tag, AlertCircle, Loader2, Star, MessageCircle } from 'lucide-react';
 import { 
   getProperty, 
   Property, 
@@ -9,7 +9,10 @@ import {
   checkAirbnbAvailability,
   getPropertyBookings,
   getPayments,
-  Booking
+  Booking,
+  getReviews,
+  createReview,
+  Review
 } from '../lib/api';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -34,6 +37,13 @@ export function PropertyDetails() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isBooking, setIsBooking] = useState(false);
+  const [activeTab, setActiveTab] = useState('overview');
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState('');
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+  const [hasCompletedStay, setHasCompletedStay] = useState(false);
+  const [hasReviewed, setHasReviewed] = useState(false);
   
   // Get booking state from URL params (if returning from login)
   const [checkIn, setCheckIn] = useState(searchParams.get('checkIn') || '');

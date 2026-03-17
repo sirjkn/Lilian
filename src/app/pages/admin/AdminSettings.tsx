@@ -125,16 +125,25 @@ export function AdminSettings() {
 
   const handleSaveHeroBackground = async () => {
     try {
-      await updateHeroSettings({ backgroundImage: heroBackgroundUrl });
-      toast.success('Hero background updated! Refresh the homepage to see changes.');
+      await updateHeroSettings({ 
+        backgroundImage: heroImages[0] || heroBackgroundUrl, // First image as primary
+        backgroundImages: heroImages // All images for carousel
+      });
+      toast.success(`${heroImages.length} hero image${heroImages.length > 1 ? 's' : ''} saved! Refresh the homepage to see changes.`);
     } catch (error) {
-      toast.error('Failed to update hero background. Make sure you\'re connected to the database.');
+      toast.error('Failed to update hero images. Make sure you\'re connected to the database.');
     }
   };
 
   const handleUploadImage = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
+
+    // Check if we've reached the limit
+    if (heroImages.length >= 4) {
+      toast.error('Maximum 4 hero images allowed');
+      return;
+    }
 
     // Check if cloudinary is configured
     if (!cloudinaryCloudName || !cloudinaryApiKey || !cloudinaryApiSecret) {
@@ -163,10 +172,13 @@ export function AdminSettings() {
         }
       );
 
-      setHeroBackgroundUrl(uploadResponse.secureUrl);
-      setUploadPreview(uploadResponse.secureUrl);
+      // Add to hero images array
+      setHeroImages([...heroImages, uploadResponse.secureUrl]);
       
-      toast.success(`Image uploaded successfully! (${(uploadResponse.bytes / 1024).toFixed(0)}KB)`);
+      toast.success(`Hero image ${heroImages.length + 1}/4 uploaded! (${(uploadResponse.bytes / 1024).toFixed(0)}KB)`);
+      
+      // Reset file input
+      event.target.value = '';
     } catch (error: any) {
       console.error('Upload error:', error);
       toast.error(error.message || 'Failed to upload image. Check your Cloudinary settings.');
@@ -487,80 +499,93 @@ export function AdminSettings() {
           <div className="grid gap-4 max-w-2xl">
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-lg">Hero Background</CardTitle>
-                <CardDescription>Upload or set the background image for the homepage hero section</CardDescription>
+                <CardTitle className="text-lg">Hero Images (Up to 4 Images)</CardTitle>
+                <CardDescription>Upload multiple hero images for homepage carousel (auto-rotates every 5 seconds)</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                {uploadPreview && (
-                  <div className="relative w-full h-32 rounded-lg overflow-hidden bg-gray-100">
-                    <img src={uploadPreview} alt="Preview" className="w-full h-full object-cover" />
-                    <button
-                      onClick={() => {
-                        setUploadPreview('');
-                        setHeroBackgroundUrl('');
-                      }}
-                      className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
+                {/* Current Hero Images */}
+                {heroImages.length > 0 && (
+                  <div>
+                    <label className="block text-sm mb-2 font-medium">Current Hero Images ({heroImages.length}/4)</label>
+                    <div className="grid grid-cols-2 gap-3">
+                      {heroImages.map((imageUrl, index) => (
+                        <div key={index} className="relative group">
+                          <img 
+                            src={imageUrl} 
+                            alt={`Hero ${index + 1}`} 
+                            className="w-full h-32 object-cover rounded-lg border-2 border-gray-200" 
+                          />
+                          <button
+                            onClick={() => {
+                              const newImages = heroImages.filter((_, i) => i !== index);
+                              setHeroImages(newImages);
+                            }}
+                            className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                          <div className="absolute bottom-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                            Image {index + 1}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
-                
-                <div>
-                  <label className="block text-sm mb-1.5 font-medium">Upload Image (Auto-compressed to WebP, max 50KB)</label>
-                  <div className="flex gap-2">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleUploadImage}
-                      className="hidden"
-                      id="upload-hero-image"
-                      disabled={isUploading}
-                    />
-                    <label
-                      htmlFor="upload-hero-image"
-                      className={`flex items-center justify-center gap-2 px-4 py-2 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
-                        isUploading 
-                          ? 'bg-gray-100 border-gray-300 cursor-not-allowed' 
-                          : 'hover:bg-gray-50 border-gray-300 hover:border-blue-500'
-                      }`}
-                    >
-                      <Upload className="h-4 w-4 text-gray-600" />
-                      <span className="text-sm text-gray-700">
-                        {isUploading ? 'Uploading...' : 'Click to upload image'}
-                      </span>
+
+                {/* Upload New Images */}
+                {heroImages.length < 4 && (
+                  <div>
+                    <label className="block text-sm mb-1.5 font-medium">
+                      Upload Hero Image {heroImages.length + 1}/4 (Auto-compressed to WebP, max 50KB)
                     </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleUploadImage}
+                        className="hidden"
+                        id="upload-hero-image"
+                        disabled={isUploading}
+                      />
+                      <label
+                        htmlFor="upload-hero-image"
+                        className={`flex items-center justify-center gap-2 px-4 py-2 border-2 border-dashed rounded-lg cursor-pointer transition-colors w-full ${
+                          isUploading 
+                            ? 'bg-gray-100 border-gray-300 cursor-not-allowed' 
+                            : 'hover:bg-gray-50 border-gray-300 hover:border-blue-500'
+                        }`}
+                      >
+                        <Upload className="h-4 w-4 text-gray-600" />
+                        <span className="text-sm text-gray-700">
+                          {isUploading ? 'Uploading...' : 'Click to upload image'}
+                        </span>
+                      </label>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Upload up to 4 images for the hero carousel. Images auto-rotate every 5 seconds.
+                    </p>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Images will be automatically converted to WebP and compressed to under 50KB
-                  </p>
+                )}
+
+                {/* Info Box */}
+                <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-xs">
+                  <p className="font-semibold text-blue-900 mb-1">📸 Hero Carousel Tips:</p>
+                  <ul className="list-disc list-inside space-y-0.5 text-blue-800">
+                    <li>Upload 1-4 high-quality images for your homepage</li>
+                    <li>Images will auto-rotate every 5 seconds</li>
+                    <li>Visitors can manually navigate using dots</li>
+                    <li>First image shows immediately on page load</li>
+                  </ul>
                 </div>
 
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-gray-300"></div>
-                  </div>
-                  <div className="relative flex justify-center text-xs">
-                    <span className="bg-white px-2 text-gray-500">OR</span>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm mb-1.5 font-medium">Background Image URL</label>
-                  <Input 
-                    value={heroBackgroundUrl}
-                    onChange={(e) => setHeroBackgroundUrl(e.target.value)}
-                    placeholder="https://example.com/image.jpg"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Paste a direct image URL from any source
-                  </p>
-                </div>
-
-                <Button onClick={handleSaveHeroBackground} size="sm" disabled={!heroBackgroundUrl}>
-                  <Save className="h-3.5 w-3.5 mr-2" />
-                  Save Background
-                </Button>
+                {/* Save Button */}
+                {heroImages.length > 0 && (
+                  <Button onClick={handleSaveHeroBackground} size="sm">
+                    <Save className="h-3.5 w-3.5 mr-2" />
+                    Save Hero Images ({heroImages.length})
+                  </Button>
+                )}
               </CardContent>
             </Card>
 
