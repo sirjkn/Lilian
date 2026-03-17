@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { CreditCard, Search, Download, RefreshCw, CheckCircle, XCircle, Clock, User, Phone, Home, Calendar } from 'lucide-react';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { toast } from 'sonner';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
