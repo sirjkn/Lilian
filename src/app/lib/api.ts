@@ -50,6 +50,13 @@ export interface Property {
   category: string;
   image: string;
   photos?: string[]; // Additional property photos for gallery
+  categorizedPhotos?: {
+    livingRoom?: string[];
+    bedroom?: string[];
+    kitchen?: string[];
+    dining?: string[];
+    amenities?: string[];
+  };
   amenities: string[];
   available: boolean;
   averageRating?: number;
@@ -95,6 +102,7 @@ export interface Payment {
 
 export interface HeroSettings {
   backgroundImage: string;
+  backgroundImages?: string[]; // Support up to 4 hero images
 }
 
 export interface User {
@@ -242,6 +250,7 @@ export async function createProperty(property: Omit<Property, 'id'>): Promise<Pr
     category: property.category,
     image: property.image,
     photos: property.photos || [],
+    categorized_photos: property.categorizedPhotos || {},
     amenities: property.amenities,
     available: property.available,
     ical_export_url: property.icalUrl || '',
@@ -275,6 +284,7 @@ export async function updateProperty(id: string, property: Partial<Property>): P
   if (property.category !== undefined) apiProperty.category = property.category;
   if (property.image !== undefined) apiProperty.image = property.image;
   if (property.photos !== undefined) apiProperty.photos = property.photos;
+  if (property.categorizedPhotos !== undefined) apiProperty.categorized_photos = property.categorizedPhotos;
   if (property.amenities !== undefined) apiProperty.amenities = property.amenities;
   if (property.available !== undefined) apiProperty.available = property.available;
   if (property.icalUrl !== undefined) apiProperty.ical_export_url = property.icalUrl;
@@ -593,11 +603,16 @@ export async function getHeroSettings(): Promise<HeroSettings | null> {
 }
 
 export async function updateHeroSettings(settings: HeroSettings): Promise<HeroSettings> {
+  const settingsArray = [
+    { category: 'hero', key: 'background_image', value: settings.backgroundImage }
+  ];
+  if (settings.backgroundImages) {
+    settingsArray.push({ category: 'hero', key: 'background_images', value: JSON.stringify(settings.backgroundImages) });
+  }
+  
   return await fetchWithAuth(`${API_BASE_URL}?endpoint=settings`, {
     method: 'PUT',
-    body: JSON.stringify([
-      { category: 'hero', key: 'background_image', value: settings.backgroundImage }
-    ]),
+    body: JSON.stringify(settingsArray),
   });
 }
 
