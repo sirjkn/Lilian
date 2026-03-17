@@ -2003,23 +2003,30 @@ You can now use this SMTP configuration for automated notifications.
         
         // Get response body for better error messages
         const responseText = await tokenResponse.text();
-        console.log('🧪 Token response body:', responseText);
+        console.log('🧪 Token response body (length):', responseText.length);
+        console.log('🧪 Token response body (first 500 chars):', responseText.substring(0, 500));
         
         if (!tokenResponse.ok) {
           let errorMessage = tokenResponse.statusText;
+          let errorDetails = null;
           
           // Try to parse error details from response
           try {
             const errorData = JSON.parse(responseText);
             errorMessage = errorData.error_description || errorData.errorMessage || errorData.message || tokenResponse.statusText;
-            console.error('❌ M-Pesa API error details:', errorData);
+            errorDetails = errorData;
+            console.error('❌ M-Pesa API error (parsed):', JSON.stringify(errorData, null, 2));
           } catch (e) {
-            console.error('❌ Token request failed:', tokenResponse.status, responseText);
+            console.error('❌ Token request failed (raw):', tokenResponse.status, responseText);
           }
           
+          // Return detailed error to frontend
           return res.status(400).json({
             success: false,
-            message: `M-Pesa API error: ${errorMessage}`
+            message: `M-Pesa API error: ${errorMessage}`,
+            details: errorDetails,
+            status: tokenResponse.status,
+            statusText: tokenResponse.statusText
           });
         }
         
