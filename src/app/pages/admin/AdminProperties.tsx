@@ -136,6 +136,8 @@ export function AdminProperties() {
         }
       });
       
+      console.log('🔍 IMAGE CATEGORIES MAP:', imageCategories);
+      console.log('🔍 CATEGORIZED PHOTOS:', categorizedPhotos);
       console.log('🔍 SUBMITTING PROPERTY:', {
         title: formData.title,
         description: formData.description,
@@ -266,6 +268,9 @@ export function AdminProperties() {
             categorizedPhotos[category as keyof typeof categorizedPhotos]!.push(imageUrl);
           }
         });
+        
+        console.log('🔍 EDIT - IMAGE CATEGORIES MAP:', imageCategories);
+        console.log('🔍 EDIT - CATEGORIZED PHOTOS:', categorizedPhotos);
         
         await updateProperty(editingProperty.id, {
           title: formData.title,
