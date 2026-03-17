@@ -189,6 +189,10 @@ export function MyBookings() {
 
       const data = await response.json();
       console.log('📊 Payment Status:', data);
+      console.log('📊 Full Response:', JSON.stringify(data, null, 2));
+      console.log('📊 Status:', data.status);
+      console.log('📊 Success:', data.success);
+      console.log('📊 ResultCode:', data.resultCode);
 
       if (data.success && data.status === 'completed') {
         toast.success('✅ Payment confirmed! Your booking is now paid.');

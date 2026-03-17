@@ -1845,7 +1845,9 @@ You can now use this SMTP configuration for automated notifications.
         console.error('❌ M-Pesa Error:', error);
         return res.status(500).json({ 
           success: false, 
-          message: 'M-Pesa service temporarily unavailable. Please check your settings.'
+          message: 'M-Pesa service temporarily unavailable. Please check your settings.',
+          error: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined
         });
       }
     }
@@ -1982,9 +1984,12 @@ You can now use this SMTP configuration for automated notifications.
         
         const queryData = await queryResponse.json();
         console.log('✅ M-Pesa Query Response:', queryData);
+        console.log('���� ResultCode:', queryData.ResultCode, 'Type:', typeof queryData.ResultCode);
+        console.log('🔍 ResponseCode:', queryData.ResponseCode, 'Type:', typeof queryData.ResponseCode);
         
         // Check if payment was successful
-        if (queryData.ResultCode === '0') {
+        // M-Pesa returns ResultCode as STRING "0" not number 0
+        if (queryData.ResultCode === '0' || queryData.ResultCode === 0) {
           // Payment successful - update database
           const transactionResult = await query(
             'SELECT booking_id, amount FROM mpesa_transactions WHERE checkout_request_id = $1',
@@ -2033,7 +2038,7 @@ You can now use this SMTP configuration for automated notifications.
               });
             }
           }
-        } else if (queryData.ResultCode === '1032') {
+        } else if (queryData.ResultCode === '1032' || queryData.ResultCode === 1032) {
           // Request cancelled by user
           await query(
             'UPDATE mpesa_transactions SET status = $1 WHERE checkout_request_id = $2',
@@ -2046,7 +2051,7 @@ You can now use this SMTP configuration for automated notifications.
             message: 'Payment was cancelled',
             resultCode: queryData.ResultCode
           });
-        } else if (queryData.ResultCode === '1037') {
+        } else if (queryData.ResultCode === '1037' || queryData.ResultCode === 1037) {
           // Timeout - user didn't enter PIN
           return res.status(200).json({
             success: false,
@@ -2054,7 +2059,7 @@ You can now use this SMTP configuration for automated notifications.
             message: 'Payment request expired',
             resultCode: queryData.ResultCode
           });
-        } else if (queryData.ResultCode === '1') {
+        } else if (queryData.ResultCode === '1' || queryData.ResultCode === 1) {
           // Insufficient funds
           return res.status(200).json({
             success: false,
@@ -2064,11 +2069,13 @@ You can now use this SMTP configuration for automated notifications.
           });
         } else {
           // Still pending or other status
+          console.log('⚠️ Unhandled ResultCode:', queryData.ResultCode);
           return res.status(200).json({
             success: false,
             status: 'pending',
             message: queryData.ResultDesc || 'Payment is still pending',
-            resultCode: queryData.ResultCode
+            resultCode: queryData.ResultCode,
+            fullResponse: queryData
           });
         }
       } catch (error) {
