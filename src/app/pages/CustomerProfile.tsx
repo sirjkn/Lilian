@@ -123,6 +123,28 @@ export function CustomerProfile() {
     return formatDateTime(dateString);
   };
 
+  const getTotalPaid = (bookingId: string) => {
+    return payments
+      .filter(p => p.bookingId === bookingId && p.status === 'paid')
+      .reduce((sum, p) => sum + parseFloat(p.amount), 0);
+  };
+
+  const getBookingStatus = (booking: Booking) => {
+    const totalPaid = getTotalPaid(booking.id);
+    
+    if (!booking.approved) {
+      return { status: 'pending approval', color: 'bg-yellow-100 text-yellow-700' };
+    }
+    
+    if (totalPaid === 0) {
+      return { status: 'awaiting payment', color: 'bg-orange-100 text-orange-700' };
+    } else if (totalPaid < parseFloat(booking.totalPrice)) {
+      return { status: 'partial payment', color: 'bg-blue-100 text-blue-700' };
+    } else {
+      return { status: 'confirmed', color: 'bg-green-100 text-green-700' };
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'confirmed':
@@ -336,6 +358,7 @@ export function CustomerProfile() {
                   <div className="space-y-4">
                     {bookings.map((booking) => {
                       const property = getPropertyDetails(booking.propertyId);
+                      const bookingStatus = getBookingStatus(booking);
                       return (
                         <Card key={booking.id} className="overflow-hidden">
                           <div className="flex flex-col md:flex-row">
@@ -361,8 +384,8 @@ export function CustomerProfile() {
                                     </p>
                                   )}
                                 </div>
-                                <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(booking.status)}`}>
-                                  {booking.status}
+                                <span className={`px-3 py-1 rounded-full text-xs font-medium ${bookingStatus.color}`}>
+                                  {bookingStatus.status}
                                 </span>
                               </div>
                               
