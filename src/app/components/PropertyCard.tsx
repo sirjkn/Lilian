@@ -82,8 +82,13 @@ export function PropertyCard({ property }: PropertyCardProps) {
           />
           {/* Booked Status Badge - Top Right */}
           {bookedUntil && (
-            <div className="absolute top-3 right-3 bg-red-600 text-white px-3 py-1 rounded-md text-xs font-semibold shadow-lg">
-              Booked (available on {bookedUntil})
+            <div className="absolute top-3 right-3">
+              <div className="bg-red-600 text-white px-3 py-1 rounded-md text-xs font-semibold shadow-lg">
+                Booked
+              </div>
+              <div className="mt-1 bg-white text-gray-800 px-3 py-1 rounded-md text-xs font-medium shadow-lg">
+                Available: {bookedUntil}
+              </div>
             </div>
           )}
           {/* Price Badge - Bottom Right, Orange, 25% smaller */}
